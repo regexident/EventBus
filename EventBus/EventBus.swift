@@ -11,6 +11,8 @@ import Foundation
 public protocol EventSubscribable {
     func add<T>(subscriber: T, for eventType: T.Type)
     func remove<T>(subscriber: T, for eventType: T.Type)
+    func remove<T>(subscriber: T)
+    func removeAllSubscribers()
 }
 
 public protocol EventNotifyable {
@@ -87,6 +89,10 @@ public class EventBus: EventNotifyable, EventSubscribable {
                 self.subscribers[identifier] = Set(subscribers.filter { $0.inner is T })
             }
         }
+    }
+
+    public func removeAllSubscribers() {
+        self.subscribers = [:]
     }
 
     public func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ()) {
