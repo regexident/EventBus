@@ -20,7 +20,7 @@ public protocol EventNotifyable {
 /// Event bus
 public class EventBus: EventNotifyable, EventSubscribable {
 
-    struct WeakSubscriber : Equatable, Hashable {
+    struct WeakSubscriber : Hashable {
         weak var inner: AnyObject?
 
         init(_ inner: AnyObject) {
@@ -59,8 +59,7 @@ public class EventBus: EventNotifyable, EventSubscribable {
             var subscribers = self.subscribers[identifier] ?? []
             let weakSubscriber = WeakSubscriber(subscriber as AnyObject)
             subscribers.insert(weakSubscriber)
-            self.subscribers[identifier] = subscribers
-            self.cleanup(eventType)
+            self.subscribers[identifier] = Set(subscribers.filter { $0.inner is T })
         }
     }
 
@@ -70,9 +69,23 @@ public class EventBus: EventNotifyable, EventSubscribable {
                 fatalError("Expected class, found struct/enum: \(subscriber)")
             }
             let identifier = ObjectIdentifier(eventType)
+            var subscribers = self.subscribers[identifier] ?? []
             let weakSubscriber = WeakSubscriber(subscriber as AnyObject)
-            let _ = self.subscribers[identifier]?.remove(weakSubscriber)
-            self.cleanup(eventType)
+            let _ = subscribers.remove(weakSubscriber)
+            self.subscribers[identifier] = Set(subscribers.filter { $0.inner is T })
+        }
+    }
+
+    public func remove<T>(subscriber: T) {
+        self.serialQueue.sync {
+            guard type(of: subscriber) is AnyClass else {
+                fatalError("Expected class, found struct/enum: \(subscriber)")
+            }
+            for (identifier, var subscribers) in self.subscribers {
+                let weakSubscriber = WeakSubscriber(subscriber as AnyObject)
+                let _ = subscribers.remove(weakSubscriber)
+                self.subscribers[identifier] = Set(subscribers.filter { $0.inner is T })
+            }
         }
     }
 
@@ -88,13 +101,5 @@ public class EventBus: EventNotifyable, EventSubscribable {
                 }
             }
         }
-    }
-
-    private func cleanup<T>(_ eventType: T.Type) {
-        let identifier = ObjectIdentifier(eventType)
-        guard let subscribers = self.subscribers[identifier] else {
-            return
-        }
-        self.subscribers[identifier] = Set(subscribers.filter { $0.inner is T })
     }
 }
