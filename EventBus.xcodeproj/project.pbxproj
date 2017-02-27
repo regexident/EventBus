@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		BF21183F1DF488DF00FF863D /* EventBus.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF2118351DF488DF00FF863D /* EventBus.framework */; };
 		BF2118441DF488DF00FF863D /* EventBusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2118431DF488DF00FF863D /* EventBusTests.swift */; };
-		BF2118461DF488DF00FF863D /* EventBus.h in Headers */ = {isa = PBXBuildFile; fileRef = BF2118381DF488DF00FF863D /* EventBus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BF2118501DF488F800FF863D /* EventBus.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF21184F1DF488F800FF863D /* EventBus.swift */; };
 		BF2118581DF5772800FF863D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2118571DF5772800FF863D /* AppDelegate.swift */; };
 		BF21185A1DF5772800FF863D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF2118591DF5772800FF863D /* ViewController.swift */; };
@@ -53,7 +52,6 @@
 
 /* Begin PBXFileReference section */
 		BF2118351DF488DF00FF863D /* EventBus.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EventBus.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		BF2118381DF488DF00FF863D /* EventBus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EventBus.h; sourceTree = "<group>"; };
 		BF2118391DF488DF00FF863D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF21183E1DF488DF00FF863D /* EventBusTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EventBusTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF2118431DF488DF00FF863D /* EventBusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventBusTests.swift; sourceTree = "<group>"; };
@@ -66,6 +64,7 @@
 		BF21185E1DF5772800FF863D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BF2118611DF5772800FF863D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		BF2118631DF5772800FF863D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BFE7A7551E64B89600F51068 /* Project.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +97,7 @@
 		BF21182B1DF488DF00FF863D = {
 			isa = PBXGroup;
 			children = (
+				BFE7A7541E64B89500F51068 /* Configs */,
 				BF2118371DF488DF00FF863D /* EventBus */,
 				BF2118421DF488DF00FF863D /* EventBusTests */,
 				BF2118561DF5772800FF863D /* EventBus iOS */,
@@ -119,7 +119,6 @@
 			isa = PBXGroup;
 			children = (
 				BF21184F1DF488F800FF863D /* EventBus.swift */,
-				BF2118381DF488DF00FF863D /* EventBus.h */,
 				BF2118391DF488DF00FF863D /* Info.plist */,
 			);
 			path = EventBus;
@@ -147,6 +146,15 @@
 			path = "EventBus iOS";
 			sourceTree = "<group>";
 		};
+		BFE7A7541E64B89500F51068 /* Configs */ = {
+			isa = PBXGroup;
+			children = (
+				BFE7A7551E64B89600F51068 /* Project.xcconfig */,
+			);
+			name = Configs;
+			path = EventBus.xcodeproj/Configs;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -154,7 +162,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF2118461DF488DF00FF863D /* EventBus.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -454,6 +461,7 @@
 		};
 		BF21184A1DF488DF00FF863D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BFE7A7551E64B89600F51068 /* Project.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
@@ -476,6 +484,7 @@
 		};
 		BF21184B1DF488DF00FF863D /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BFE7A7551E64B89600F51068 /* Project.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";

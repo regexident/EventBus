@@ -88,6 +88,22 @@ class Subscriber : ValueChange {
 }
 ```
 
+### Chaining
+
+Sometimes it is desirable to have one event bus forward a carbon copy of all of its events to a second event bus. A possible scenario would be a proxy event bus that acts as a centralized facade to an arbitrary number of internal event buses.
+
+```swift
+let eventBus1 = EventBus()
+let eventBus2 = EventBus()
+let proxyEventBus = EventBus()
+eventBus1.attach(chain: proxyEventBus)
+eventBus2.attach(chain: proxyEventBus)
+
+proxyEventBus.add(subscriber: subscriber, for: ValueChange.self)
+```
+
+For each event notified on either `eventBus1 ` or `eventBus2` a carbon copy will be forwarded to `proxyEventBus `.
+
 ## Installation
 
 The recommended way to add **EventBus** to your project is via [Carthage](https://github.com/Carthage/Carthage):
