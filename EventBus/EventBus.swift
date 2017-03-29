@@ -59,9 +59,10 @@ public class EventBus: EventNotifyable, EventSubscribable {
 
     public func add<T>(subscriber: T, for eventType: T.Type) {
         self.serialQueue.sync {
-            guard type(of: subscriber) is AnyClass else {
-                fatalError("Expected class, found struct/enum: \(subscriber)")
-            }
+            // Temporarily disabled due to https://bugs.swift.org/browse/SR-4420:
+//            guard type(of: subscriber) is AnyClass else {
+//                fatalError("Expected class, found struct/enum: \(subscriber)")
+//            }
             let identifier = ObjectIdentifier(eventType)
             var subscribed = self.subscribed[identifier] ?? []
             let weakBox = WeakBox(subscriber as AnyObject)
@@ -72,9 +73,10 @@ public class EventBus: EventNotifyable, EventSubscribable {
 
     public func remove<T>(subscriber: T, for eventType: T.Type) {
         self.serialQueue.sync {
-            guard type(of: subscriber) is AnyClass else {
-                fatalError("Expected class, found struct/enum: \(subscriber)")
-            }
+            // Temporarily disabled due to https://bugs.swift.org/browse/SR-4420:
+//            guard type(of: subscriber) is AnyClass else {
+//                fatalError("Expected class, found struct/enum: \(subscriber)")
+//            }
             let identifier = ObjectIdentifier(eventType)
             var subscribed = self.subscribed[identifier] ?? []
             let weakBox = WeakBox(subscriber as AnyObject)
@@ -85,9 +87,10 @@ public class EventBus: EventNotifyable, EventSubscribable {
 
     public func remove<T>(subscriber: T) {
         self.serialQueue.sync {
-            guard type(of: subscriber) is AnyClass else {
-                fatalError("Expected class, found struct/enum: \(subscriber)")
-            }
+            // Temporarily disabled due to https://bugs.swift.org/browse/SR-4420:
+//            guard type(of: subscriber) is AnyClass else {
+//                fatalError("Expected class, found struct/enum: \(subscriber)")
+//            }
             for (identifier, var subscribed) in self.subscribed {
                 let weakBox = WeakBox(subscriber as AnyObject)
                 let _ = subscribed.remove(weakBox)
