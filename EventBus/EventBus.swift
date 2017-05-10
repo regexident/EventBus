@@ -13,7 +13,9 @@ public protocol EventSubscribable {
     func remove<T>(subscriber: T, for eventType: T.Type)
     func remove<T>(subscriber: T)
     func removeAllSubscribers()
+}
 
+public protocol EventChainable {
     func attach(chain: EventNotifyable)
     func detach(chain: EventNotifyable)
     func detachAllChains()
@@ -24,7 +26,7 @@ public protocol EventNotifyable {
 }
 
 /// Event bus
-public class EventBus: EventNotifyable, EventSubscribable {
+public class EventBus {
 
     struct WeakBox : Hashable {
         weak var inner: AnyObject?
@@ -47,15 +49,18 @@ public class EventBus: EventNotifyable, EventSubscribable {
 
     public static let shared: EventBus = EventBus()
 
-    var subscribed: [ObjectIdentifier: Set<WeakBox>] = [:]
-    var chained: Set<WeakBox> = []
+    fileprivate var subscribed: [ObjectIdentifier: Set<WeakBox>] = [:]
+    fileprivate var chained: Set<WeakBox> = []
 
-    private let serialQueue: DispatchQueue = DispatchQueue(label: "com.regexident.eventbus")
-    private let queue: DispatchQueue
+    fileprivate let serialQueue: DispatchQueue = DispatchQueue(label: "com.regexident.eventbus")
+    fileprivate let queue: DispatchQueue
 
     public init(queue: DispatchQueue = DispatchQueue.global()) {
         self.queue = queue
     }
+}
+
+extension EventBus : EventSubscribable {
 
     public func add<T>(subscriber: T, for eventType: T.Type) {
         self.serialQueue.sync {
@@ -104,6 +109,9 @@ public class EventBus: EventNotifyable, EventSubscribable {
             self.subscribed = [:]
         }
     }
+}
+
+extension EventBus : EventNotifyable {
 
     public func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ()) {
         self.serialQueue.sync {
@@ -125,6 +133,9 @@ public class EventBus: EventNotifyable, EventSubscribable {
             }
         }
     }
+}
+
+extension EventBus : EventChainable {
 
     public func attach(chain: EventNotifyable) {
         self.serialQueue.sync {
