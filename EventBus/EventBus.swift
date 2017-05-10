@@ -100,7 +100,9 @@ public class EventBus: EventNotifyable, EventSubscribable {
     }
 
     public func removeAllSubscribers() {
-        self.subscribed = [:]
+        self.serialQueue.sync {
+            self.subscribed = [:]
+        }
     }
 
     public func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ()) {
@@ -137,6 +139,8 @@ public class EventBus: EventNotifyable, EventSubscribable {
     }
 
     public func detachAllChains() {
-        self.chained = []
+        self.serialQueue.sync {
+            self.chained = []
+        }
     }
 }
