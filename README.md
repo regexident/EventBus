@@ -24,12 +24,12 @@ class Lottery {
     private let eventBus = EventBus()
     
     func add(player: LottoPlayer) {
-    	self.eventBus.add(subscriber: player, for: LotteryDraw.self)
+        self.eventBus.add(subscriber: player, for: LotteryDraw.self)
     }
     
     func draw() {
         let winningNumber = arc4random()
-        self.eventBus.notify(ValueChange.self) { subscriber in
+        self.eventBus.notify(LotteryDraw.self) { subscriber in
             subscriber.didDraw(number: Int(winningNumber), in: self)
         }
     }
@@ -51,7 +51,7 @@ Consider this simple key-value-observing scenario:
 ```swift
 import EventBus
 
-protocol ValueChange {
+protocol ValueChangeObserver {
     func willChangeValue(of: Publisher, from: Int, to: Int)
     func didChangeValue(of: Publisher, from: Int, to: Int)
 }
@@ -61,23 +61,23 @@ class Publisher {
     
     var value: Int {
         willSet {
-        	  self.eventBus.notify(ValueChange.self) { subscriber in
+            self.eventBus.notify(ValueChangeObserver.self) { subscriber in
                 subscriber.willChange(value: self.value, to: newValue)
             }
         }
         didSet {
-            self.eventBus.notify(ValueChange.self) { subscriber in
+            self.eventBus.notify(ValueChangeObserver.self) { subscriber in
                 subscriber.didChange(value: oldValue, to: self.value)
             }
         }
     }
     
-    func add(subscriber: ValueChange) {
-    	self.eventBus.add(subscriber: subscriber, for: ValueChange.self)
+    func add(subscriber: ValueChangeObserver) {
+        self.eventBus.add(subscriber: subscriber, for: ValueChangeObserver.self)
     }
 }
 
-class Subscriber : ValueChange {
+class Subscriber : ValueChangeObserver {
     func willChangeValue(of: Publisher, from: Int, to: Int) {
         print("\(of) will change value from \(from) to \(to).")
     }
@@ -99,7 +99,7 @@ let proxyEventBus = EventBus()
 eventBus1.attach(chain: proxyEventBus)
 eventBus2.attach(chain: proxyEventBus)
 
-proxyEventBus.add(subscriber: subscriber, for: ValueChange.self)
+proxyEventBus.add(subscriber: subscriber, for: SomeProtocol.self)
 ```
 
 For each event notified on either `eventBus1 ` or `eventBus2` a carbon copy will be forwarded to `proxyEventBus `.
