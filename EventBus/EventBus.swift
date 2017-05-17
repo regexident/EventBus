@@ -139,13 +139,17 @@ extension EventBus : EventChainable {
 
     public func attach(chain: EventNotifyable) {
         self.serialQueue.sync {
-            let _ = self.chained.insert(WeakBox(chain as AnyObject))
+            var chained = self.chained
+            chained.insert(WeakBox(chain as AnyObject))
+            self.chained = Set(chained.filter { $0.inner is EventNotifyable })
         }
     }
 
     public func detach(chain: EventNotifyable) {
         self.serialQueue.sync {
-            let _ = self.chained.remove(WeakBox(chain as AnyObject))
+            var chained = self.chained
+            chained.remove(WeakBox(chain as AnyObject))
+            self.chained = Set(chained.filter { $0.inner is EventNotifyable })
         }
     }
 
