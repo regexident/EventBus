@@ -16,12 +16,12 @@ public protocol EventSubscribable {
 }
 
 public protocol EventChainable {
-    func attach(chain: EventNotifyable)
-    func detach(chain: EventNotifyable)
+    func attach(chain: EventNotifiable)
+    func detach(chain: EventNotifiable)
     func detachAllChains()
 }
 
-public protocol EventNotifyable {
+public protocol EventNotifiable {
     func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ())
 }
 
@@ -111,12 +111,12 @@ extension EventBus : EventSubscribable {
     }
 }
 
-extension EventBus : EventNotifyable {
+extension EventBus : EventNotifiable {
 
     public func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ()) {
         self.serialQueue.sync {
             defer {
-                for eventBus in chained.flatMap({ $0.inner as? EventNotifyable }) {
+                for eventBus in chained.flatMap({ $0.inner as? EventNotifiable }) {
                     self.queue.async {
                         eventBus.notify(eventType, closure: closure)
                     }
@@ -137,19 +137,19 @@ extension EventBus : EventNotifyable {
 
 extension EventBus : EventChainable {
 
-    public func attach(chain: EventNotifyable) {
+    public func attach(chain: EventNotifiable) {
         self.serialQueue.sync {
             var chained = self.chained
             chained.insert(WeakBox(chain as AnyObject))
-            self.chained = Set(chained.filter { $0.inner is EventNotifyable })
+            self.chained = Set(chained.filter { $0.inner is EventNotifiable })
         }
     }
 
-    public func detach(chain: EventNotifyable) {
+    public func detach(chain: EventNotifiable) {
         self.serialQueue.sync {
             var chained = self.chained
             chained.remove(WeakBox(chain as AnyObject))
-            self.chained = Set(chained.filter { $0.inner is EventNotifyable })
+            self.chained = Set(chained.filter { $0.inner is EventNotifiable })
         }
     }
 
