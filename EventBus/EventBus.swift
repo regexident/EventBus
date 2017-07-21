@@ -8,20 +8,20 @@
 
 import Foundation
 
-public protocol EventSubscribable {
+public protocol EventSubscribable: class {
     func add<T>(subscriber: T, for eventType: T.Type)
     func remove<T>(subscriber: T, for eventType: T.Type)
     func remove<T>(subscriber: T)
     func removeAllSubscribers()
 }
 
-public protocol EventChainable {
+public protocol EventChainable: class {
     func attach(chain: EventNotifiable)
     func detach(chain: EventNotifiable)
     func detachAllChains()
 }
 
-public protocol EventNotifiable {
+public protocol EventNotifiable: class {
     func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ())
 }
 
