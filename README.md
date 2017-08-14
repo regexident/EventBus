@@ -22,11 +22,11 @@ protocol LotteryDraw {
 
 class Lottery {
     private let eventBus = EventBus()
-    
+
     func add(player: LottoPlayer) {
         self.eventBus.add(subscriber: player, for: LotteryDraw.self)
     }
-    
+
     func draw() {
         let winningNumber = arc4random()
         self.eventBus.notify(LotteryDraw.self) { subscriber in
@@ -58,7 +58,7 @@ protocol ValueChangeObserver {
 
 class Publisher {
     private let eventBus = EventBus()
-    
+
     var value: Int {
         willSet {
             self.eventBus.notify(ValueChangeObserver.self) { subscriber in
@@ -71,7 +71,7 @@ class Publisher {
             }
         }
     }
-    
+
     func add(subscriber: ValueChangeObserver) {
         self.eventBus.add(subscriber: subscriber, for: ValueChangeObserver.self)
     }
@@ -81,7 +81,7 @@ class Subscriber : ValueChangeObserver {
     func willChangeValue(of: Publisher, from: Int, to: Int) {
         print("\(of) will change value from \(from) to \(to).")
     }
-    
+
     func didChangeValue(of: Publisher, from: Int, to: Int) {
         print("\(of) did change value from \(from) to \(to).")
     }
@@ -104,11 +104,39 @@ proxyEventBus.add(subscriber: subscriber, for: SomeProtocol.self)
 
 For each event notified on either `eventBus1 ` or `eventBus2` a carbon copy will be forwarded to `proxyEventBus `.
 
+### Encapsulation
+
+The API of EventBus is split up into three protocols:
+
+- `EventSubscribable`
+- `EventChainable`
+- `EventNotifiable`
+
+This enables for ergonomic safe encapsulation …
+
+```swift
+class Publisher {
+    var eventSubscribable: EventSubscribable {
+        return self.eventBus
+    }
+
+    private let eventBus: EventBus = …
+
+    // …
+}
+```
+
+… preventing anybody else from issuing notifications on `Publisher`'s event bus.
+
 ## Installation
 
 The recommended way to add **EventBus** to your project is via [Carthage](https://github.com/Carthage/Carthage):
 
     github 'regexident/EventBus'
+
+Or to add **EventBus** to your project is via [CocoaPods](https://cocoapods.org):
+
+    pod 'Swift-EventBus'
 
 ## License
 
