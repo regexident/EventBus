@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "BF2118341DF488DF00FF863D"
                BuildableName = "EventBus.framework"
-               BlueprintName = "EventBus"
+               BlueprintName = "EventBus (Framework)"
                ReferencedContainer = "container:EventBus.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,7 +45,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BF2118341DF488DF00FF863D"
             BuildableName = "EventBus.framework"
-            BlueprintName = "EventBus"
+            BlueprintName = "EventBus (Framework)"
             ReferencedContainer = "container:EventBus.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -68,7 +68,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BF2118341DF488DF00FF863D"
             BuildableName = "EventBus.framework"
-            BlueprintName = "EventBus"
+            BlueprintName = "EventBus (Framework)"
             ReferencedContainer = "container:EventBus.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -86,7 +86,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BF2118341DF488DF00FF863D"
             BuildableName = "EventBus.framework"
-            BlueprintName = "EventBus"
+            BlueprintName = "EventBus (Framework)"
             ReferencedContainer = "container:EventBus.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "BF4B823D1F41ACC1009A317D"
-               BuildableName = "libEventBus (Static).a"
-               BlueprintName = "EventBus (Static)"
+               BuildableName = "libEventBus.a"
+               BlueprintName = "EventBus (Static Library)"
                ReferencedContainer = "container:EventBus.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -48,8 +48,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BF4B823D1F41ACC1009A317D"
-            BuildableName = "libEventBus (Static).a"
-            BlueprintName = "EventBus (Static)"
+            BuildableName = "libEventBus.a"
+            BlueprintName = "EventBus (Static Library)"
             ReferencedContainer = "container:EventBus.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -66,8 +66,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BF4B823D1F41ACC1009A317D"
-            BuildableName = "libEventBus (Static).a"
-            BlueprintName = "EventBus (Static)"
+            BuildableName = "libEventBus.a"
+            BlueprintName = "EventBus (Static Library)"
             ReferencedContainer = "container:EventBus.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

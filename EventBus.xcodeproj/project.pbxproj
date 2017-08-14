@@ -75,7 +75,7 @@
 		BF2118611DF5772800FF863D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		BF2118631DF5772800FF863D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF4B823E1F41ACC1009A317D /* libEventBus.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libEventBus.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		BFE7A7551E64B89600F51068 /* Project.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
+		BFE7A7551E64B89600F51068 /* Universal.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Universal.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -168,7 +168,7 @@
 		BFE7A7541E64B89500F51068 /* Configs */ = {
 			isa = PBXGroup;
 			children = (
-				BFE7A7551E64B89600F51068 /* Project.xcconfig */,
+				BFE7A7551E64B89600F51068 /* Universal.xcconfig */,
 			);
 			name = Configs;
 			path = EventBus.xcodeproj/Configs;
@@ -187,9 +187,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		BF2118341DF488DF00FF863D /* EventBus */ = {
+		BF2118341DF488DF00FF863D /* EventBus (Framework) */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = BF2118491DF488DF00FF863D /* Build configuration list for PBXNativeTarget "EventBus" */;
+			buildConfigurationList = BF2118491DF488DF00FF863D /* Build configuration list for PBXNativeTarget "EventBus (Framework)" */;
 			buildPhases = (
 				BF2118301DF488DF00FF863D /* Sources */,
 				BF2118311DF488DF00FF863D /* Frameworks */,
@@ -200,7 +200,7 @@
 			);
 			dependencies = (
 			);
-			name = EventBus;
+			name = "EventBus (Framework)";
 			productName = EventBus;
 			productReference = BF2118351DF488DF00FF863D /* EventBus.framework */;
 			productType = "com.apple.product-type.framework";
@@ -242,9 +242,9 @@
 			productReference = BF2118551DF5772800FF863D /* EventBus iOS.app */;
 			productType = "com.apple.product-type.application";
 		};
-		BF4B823D1F41ACC1009A317D /* EventBus (Static) */ = {
+		BF4B823D1F41ACC1009A317D /* EventBus (Static Library) */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = BF4B82461F41ACC1009A317D /* Build configuration list for PBXNativeTarget "EventBus (Static)" */;
+			buildConfigurationList = BF4B82461F41ACC1009A317D /* Build configuration list for PBXNativeTarget "EventBus (Static Library)" */;
 			buildPhases = (
 				BF4B823A1F41ACC1009A317D /* Sources */,
 				BF4B823B1F41ACC1009A317D /* Frameworks */,
@@ -254,7 +254,7 @@
 			);
 			dependencies = (
 			);
-			name = "EventBus (Static)";
+			name = "EventBus (Static Library)";
 			productName = "EventBus (Static)";
 			productReference = BF4B823E1F41ACC1009A317D /* libEventBus.a */;
 			productType = "com.apple.product-type.library.static";
@@ -271,6 +271,7 @@
 				TargetAttributes = {
 					BF2118341DF488DF00FF863D = {
 						CreatedOnToolsVersion = 8.2;
+						DevelopmentTeam = GSGGFU6A2H;
 						LastSwiftMigration = 0820;
 						ProvisioningStyle = Manual;
 					};
@@ -286,7 +287,7 @@
 					};
 					BF4B823D1F41ACC1009A317D = {
 						CreatedOnToolsVersion = 9.0;
-						DevelopmentTeam = RHSV5Y8MLD;
+						DevelopmentTeam = GSGGFU6A2H;
 					};
 				};
 			};
@@ -303,8 +304,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				BF2118341DF488DF00FF863D /* EventBus */,
-				BF4B823D1F41ACC1009A317D /* EventBus (Static) */,
+				BF2118341DF488DF00FF863D /* EventBus (Framework) */,
+				BF4B823D1F41ACC1009A317D /* EventBus (Static Library) */,
 				BF21183D1DF488DF00FF863D /* EventBusTests */,
 				BF2118541DF5772800FF863D /* EventBus iOS */,
 			);
@@ -377,12 +378,12 @@
 /* Begin PBXTargetDependency section */
 		BF2118411DF488DF00FF863D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = BF2118341DF488DF00FF863D /* EventBus */;
+			target = BF2118341DF488DF00FF863D /* EventBus (Framework) */;
 			targetProxy = BF2118401DF488DF00FF863D /* PBXContainerItemProxy */;
 		};
 		BF9142E71DF57F4300040556 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = BF2118341DF488DF00FF863D /* EventBus */;
+			target = BF2118341DF488DF00FF863D /* EventBus (Framework) */;
 			targetProxy = BF9142E61DF57F4300040556 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -434,7 +435,6 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -455,14 +455,12 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -495,7 +493,6 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -510,12 +507,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 3.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -524,21 +519,18 @@
 		};
 		BF21184A1DF488DF00FF863D /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BFE7A7551E64B89600F51068 /* Project.xcconfig */;
+			baseConfigurationReference = BFE7A7551E64B89600F51068 /* Universal.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = EventBus/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.regexident.EventBus;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = EventBus;
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -546,21 +538,18 @@
 		};
 		BF21184B1DF488DF00FF863D /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BFE7A7551E64B89600F51068 /* Project.xcconfig */;
+			baseConfigurationReference = BFE7A7551E64B89600F51068 /* Universal.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = EventBus/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.regexident.EventBus;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = EventBus;
 				SKIP_INSTALL = YES;
 			};
 			name = Release;
@@ -593,7 +582,6 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = GSGGFU6A2H;
 				INFOPLIST_FILE = "EventBus iOS/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -608,7 +596,6 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = GSGGFU6A2H;
 				INFOPLIST_FILE = "EventBus iOS/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -619,35 +606,29 @@
 		};
 		BF4B82441F41ACC1009A317D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BFE7A7551E64B89600F51068 /* Universal.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = RHSV5Y8MLD;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = EventBus;
 				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
 		BF4B82451F41ACC1009A317D /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BFE7A7551E64B89600F51068 /* Universal.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = RHSV5Y8MLD;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = EventBus;
 				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -663,7 +644,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		BF2118491DF488DF00FF863D /* Build configuration list for PBXNativeTarget "EventBus" */ = {
+		BF2118491DF488DF00FF863D /* Build configuration list for PBXNativeTarget "EventBus (Framework)" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BF21184A1DF488DF00FF863D /* Debug */,
@@ -690,7 +671,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		BF4B82461F41ACC1009A317D /* Build configuration list for PBXNativeTarget "EventBus (Static)" */ = {
+		BF4B82461F41ACC1009A317D /* Build configuration list for PBXNativeTarget "EventBus (Static Library)" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BF4B82441F41ACC1009A317D /* Debug */,
