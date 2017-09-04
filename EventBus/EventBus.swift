@@ -60,14 +60,13 @@ public class EventBus {
     }
 }
 
-extension EventBus : EventSubscribable {
-
+extension EventBus: EventSubscribable {
     public func add<T>(subscriber: T, for eventType: T.Type) {
+        // Temporarily disabled due to https://bugs.swift.org/browse/SR-4420:
+        guard type(of: subscriber as Any) is AnyClass else {
+            fatalError("Expected class, found struct/enum: \(subscriber)")
+        }
         self.serialQueue.sync {
-            // Temporarily disabled due to https://bugs.swift.org/browse/SR-4420:
-//            guard type(of: subscriber) is AnyClass else {
-//                fatalError("Expected class, found struct/enum: \(subscriber)")
-//            }
             let identifier = ObjectIdentifier(eventType)
             var subscribed = self.subscribed[identifier] ?? []
             let weakBox = WeakBox(subscriber as AnyObject)
@@ -77,11 +76,11 @@ extension EventBus : EventSubscribable {
     }
 
     public func remove<T>(subscriber: T, for eventType: T.Type) {
+        // Temporarily disabled due to https://bugs.swift.org/browse/SR-4420:
+        guard type(of: subscriber as Any) is AnyClass else {
+            fatalError("Expected class, found struct/enum: \(subscriber)")
+        }
         self.serialQueue.sync {
-            // Temporarily disabled due to https://bugs.swift.org/browse/SR-4420:
-//            guard type(of: subscriber) is AnyClass else {
-//                fatalError("Expected class, found struct/enum: \(subscriber)")
-//            }
             let identifier = ObjectIdentifier(eventType)
             var subscribed = self.subscribed[identifier] ?? []
             let weakBox = WeakBox(subscriber as AnyObject)
@@ -91,11 +90,11 @@ extension EventBus : EventSubscribable {
     }
 
     public func remove<T>(subscriber: T) {
+        // Temporarily disabled due to https://bugs.swift.org/browse/SR-4420:
+        guard type(of: subscriber as Any) is AnyClass else {
+            fatalError("Expected class, found struct/enum: \(subscriber)")
+        }
         self.serialQueue.sync {
-            // Temporarily disabled due to https://bugs.swift.org/browse/SR-4420:
-//            guard type(of: subscriber) is AnyClass else {
-//                fatalError("Expected class, found struct/enum: \(subscriber)")
-//            }
             for (identifier, var subscribed) in self.subscribed {
                 let weakBox = WeakBox(subscriber as AnyObject)
                 let _ = subscribed.remove(weakBox)
@@ -109,10 +108,27 @@ extension EventBus : EventSubscribable {
             self.subscribed = [:]
         }
     }
+
+    internal func has<T>(subscriber: T, for eventType: T.Type) -> Bool {
+        var result: Bool = false
+        // Temporarily disabled due to https://bugs.swift.org/browse/SR-4420:
+        guard type(of: subscriber as Any) is AnyClass else {
+            fatalError("Expected class, found struct/enum: \(subscriber)")
+        }
+        self.serialQueue.sync {
+            let identifier = ObjectIdentifier(eventType)
+            guard let subscribed = self.subscribed[identifier] else {
+                result = false
+                return
+            }
+            result = subscribed.contains { $0.inner === (subscriber as AnyObject) }
+            return
+        }
+        return result
+    }
 }
 
-extension EventBus : EventNotifiable {
-
+extension EventBus: EventNotifiable {
     public func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ()) {
         self.serialQueue.sync {
             defer {
@@ -135,8 +151,7 @@ extension EventBus : EventNotifiable {
     }
 }
 
-extension EventBus : EventChainable {
-
+extension EventBus: EventChainable {
     public func attach(chain: EventNotifiable) {
         self.serialQueue.sync {
             var chained = self.chained
@@ -157,5 +172,16 @@ extension EventBus : EventChainable {
         self.serialQueue.sync {
             self.chained = []
         }
+    }
+
+    internal func has(chain: EventNotifiable) -> Bool {
+        var result: Bool = false
+        self.serialQueue.sync {
+            result = self.chained.contains {
+                $0.inner === (chain as AnyObject)
+            }
+            return
+        }
+        return result
     }
 }

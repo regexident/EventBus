@@ -29,7 +29,26 @@
       language = ""
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "BF21183D1DF488DF00FF863D"
+               BuildableName = "EventBusTests.xctest"
+               BlueprintName = "EventBusTests"
+               ReferencedContainer = "container:EventBus.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "BF4B823D1F41ACC1009A317D"
+            BuildableName = "libEventBus.a"
+            BlueprintName = "EventBus (Static Library)"
+            ReferencedContainer = "container:EventBus.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </TestAction>
