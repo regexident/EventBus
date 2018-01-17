@@ -59,12 +59,13 @@ public class EventBus {
     fileprivate let serialQueue: DispatchQueue = DispatchQueue(label: "com.regexident.eventbus")
     fileprivate let queue: DispatchQueue
 
-    public init(queue: DispatchQueue = .global(), strict: Bool = false) {
-        self.queue = queue
+    public init(strict: Bool = false, queue: DispatchQueue = .global()) {
         self.registered = strict ? [:] : nil
+        self.queue = queue
     }
 
     fileprivate func validateSubscriber<T>(subscriber: T) {
+        // Related bug: https://bugs.swift.org/browse/SR-4420:
         if !(type(of: subscriber as Any) is AnyClass) {
             let message = "Expected class, found struct/enum: \(subscriber)"
             #if DEBUG
@@ -104,7 +105,6 @@ extension EventBus: EventRegistrable {
 
 extension EventBus: EventSubscribable {
     public func add<T>(subscriber: T, for eventType: T.Type) {
-        // Temporarily disabled due to https://bugs.swift.org/browse/SR-4420:
         self.validateSubscriber(subscriber: subscriber)
         self.validateEventType(type: eventType)
         self.serialQueue.sync {
@@ -117,7 +117,6 @@ extension EventBus: EventSubscribable {
     }
 
     public func remove<T>(subscriber: T, for eventType: T.Type) {
-        // Temporarily disabled due to https://bugs.swift.org/browse/SR-4420:
         self.validateSubscriber(subscriber: subscriber)
         self.validateEventType(type: eventType)
         self.serialQueue.sync {
@@ -130,7 +129,6 @@ extension EventBus: EventSubscribable {
     }
 
     public func remove<T>(subscriber: T) {
-        // Temporarily disabled due to https://bugs.swift.org/browse/SR-4420:
         self.validateSubscriber(subscriber: subscriber)
         self.serialQueue.sync {
             for (identifier, var subscribed) in self.subscribed {
@@ -149,7 +147,6 @@ extension EventBus: EventSubscribable {
 
     internal func has<T>(subscriber: T, for eventType: T.Type) -> Bool {
         var result: Bool = false
-        // Temporarily disabled due to https://bugs.swift.org/browse/SR-4420:
         self.validateSubscriber(subscriber: subscriber)
         self.validateEventType(type: eventType)
         self.serialQueue.sync {
