@@ -335,7 +335,7 @@ public class EventBus {
     }
 
     fileprivate func pruned<T>(subscribed: Set<WeakBox>, for eventType: T.Type) -> Set<WeakBox>? {
-        let filtered = subscribed.filter { $0.inner is T }
+        let filtered = subscribed.lazy.filter { $0.inner is T }
         return filtered.isEmpty ? nil : Set(filtered)
     }
 }
@@ -414,7 +414,7 @@ extension EventBus: EventNotifiable {
         self.serialQueue.sync {
             let identifier = ObjectIdentifier(eventType)
             defer {
-                for eventBus in self.chained.flatMap({ $0.inner as? EventNotifiable }) {
+                for eventBus in self.chained.lazy.flatMap({ $0.inner as? EventNotifiable }) {
                     self.queue.async {
                         eventBus.notify(eventType, closure: closure)
                     }
@@ -423,7 +423,7 @@ extension EventBus: EventNotifiable {
             guard let subscribed = self.subscribed[identifier] else {
                 return
             }
-            for subscriber in subscribed.flatMap({ $0.inner as? T }) {
+            for subscriber in subscribed.lazy.flatMap({ $0.inner as? T }) {
                 self.queue.async {
                     closure(subscriber)
                 }
@@ -437,7 +437,7 @@ extension EventBus: EventChainable {
         self.serialQueue.sync {
             var chained = self.chained
             chained.insert(WeakBox(chain as AnyObject))
-            self.chained = Set(chained.filter { $0.inner is EventNotifiable })
+            self.chained = Set(chained.lazy.filter { $0.inner is EventNotifiable })
         }
     }
 
@@ -445,7 +445,7 @@ extension EventBus: EventChainable {
         self.serialQueue.sync {
             var chained = self.chained
             chained.remove(WeakBox(chain as AnyObject))
-            self.chained = Set(chained.filter { $0.inner is EventNotifiable })
+            self.chained = Set(chained.lazy.filter { $0.inner is EventNotifiable })
         }
     }
 
