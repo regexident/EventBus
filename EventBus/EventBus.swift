@@ -195,13 +195,13 @@ public struct Options: OptionSet {
     /// been registered (i.e. via `eventBus.register(forEvent: MyEvent.self)`) with the event bus.
     ///
     /// - Note:
-    ///   Warnings are only emitted if either a `DEBUG` flag is present:
+    ///   Warnings are only emitted if either a `DEBUG` or `EVENTBUS_STRICT` compiler flag is present:
     ///
     ///   The specific behavior is as follows:
     /// ```
-    /// #if DEBUG
+    /// #if DEBUG && EVENTBUS_STRICT
     ///     fatalError(message)
-    /// #else
+    /// #elseif DEBUG
     ///     print(message)
     /// #endif
     /// ```
@@ -211,13 +211,13 @@ public struct Options: OptionSet {
     /// been registered (i.e. via `eventBus.register(forEvent: MyEvent.self)`) with the event bus.
     ///
     /// - Note:
-    ///   Warnings are only emitted if either a `DEBUG` flag is present:
+    ///   Warnings are only emitted if either a `DEBUG` or `EVENTBUS_STRICT` compiler flag is present:
     ///
     ///   The specific behavior is as follows:
     /// ```
-    /// #if DEBUG
+    /// #if DEBUG && EVENTBUS_STRICT
     ///     fatalError(message)
-    /// #else
+    /// #elseif DEBUG
     ///     print(message)
     /// #endif
     /// ```
@@ -285,9 +285,9 @@ public class EventBus {
         // Related bug: https://bugs.swift.org/browse/SR-4420:
         if !(type(of: subscriber as Any) is AnyClass) {
             let message = "Expected class, found struct/enum: \(subscriber)"
-            #if DEBUG
+            #if DEBUG && EVENTBUS_STRICT
                 fatalError(message)
-            #else
+            #elseif DEBUG || EVENTBUS_STRICT
                 print(message)
             #endif
         }
@@ -303,9 +303,9 @@ public class EventBus {
         }
         let names = Array(self.registered.values).joined(separator: ", ")
         let message = "\(self.nameAndAddress): Expected event of registered type (e.g. \(names)), found: \(eventType)"
-        #if DEBUG
+        #if DEBUG && EVENTBUS_STRICT
             fatalError(message)
-        #else
+        #elseif DEBUG
             print(message)
         #endif
     }
@@ -319,9 +319,9 @@ public class EventBus {
             return
         }
         let message = "\(self.nameAndAddress): Event of type '\(eventType)' was not handled."
-        #if DEBUG
+        #if DEBUG && EVENTBUS_STRICT
             fatalError(message)
-        #else
+        #elseif DEBUG
             print(message)
         #endif
     }
