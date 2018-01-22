@@ -8,42 +8,226 @@
 
 import Foundation
 
+/// A reduced type-erased interface for EventBus
+/// for selectively exposing its type-registration capabilities.
 public protocol EventRegistrable: class {
+
+    /// Registers a given event bus for a given event type.
+    ///
+    /// - Parameters:
+    ///   - eventType: the event type to register
+    ///
+    /// - Note:
+    ///   This only has an effect if the event bus
+    ///   has been initialized with the `Options.warnUnknown` flag.
+    ///
+    /// ```
+    /// protocol MyEvent {
+    ///     // ...
+    /// }
+    ///
+    /// let eventBus = EventBus()
+    /// eventBus.register(forEvent: MyEvent.self)
+    /// ```
     func register<T>(forEvent eventType: T.Type)
 }
 
+/// A reduced type-erased interface for EventBus
+/// for selectively exposing its event-subscription capabilities.
 public protocol EventSubscribable: class {
+    /// Adds a given object to the list of subscribers of a given event type on the event bus.
+    ///
+    /// - Parameters:
+    ///   - subscriber: the subscriber to add to the event bus for the given event type
+    ///   - eventType: the event type to subscribe for
+    ///
+    /// ```
+    /// protocol MyEvent {
+    ///     // ...
+    /// }
+    ///
+    /// let eventBus = EventBus()
+    /// // ...
+    /// eventBus.add(subscriber: subscriber, for: MyEvent.self)
+    /// ```
     func add<T>(subscriber: T, for eventType: T.Type)
+
+    /// Removes a given object from the list of subscribers of a given event type on the event bus.
+    ///
+    /// - Parameters:
+    ///   - subscriber: the subscriber to remove from the event bus for the given event type
+    ///   - eventType: the event type to unsubscribe from
+    ///
+    /// ```
+    /// protocol MyEvent {
+    ///     // ...
+    /// }
+    ///
+    /// let eventBus = EventBus()
+    /// // ...
+    /// eventBus.add(subscriber: subscriber, for: MyEvent.self)
+    /// // ...
+    /// eventBus.remove(subscriber: subscriber, for: MyEvent.self)
+    /// ```
     func remove<T>(subscriber: T, for eventType: T.Type)
+
+    /// Removes a given object from the list of subscribers on the event bus.
+    ///
+    /// - Parameters:
+    ///   - subscriber: the subscriber to remove from the event bus for all event types
+    ///
+    /// ```
+    /// protocol MyEvent {
+    ///     // ...
+    /// }
+    ///
+    /// let eventBus = EventBus()
+    /// // ...
+    /// eventBus.add(subscriber: subscriber, for: MyEvent.self)
+    /// // ...
+    /// eventBus.remove(subscriber: subscriber)
+    /// ```
     func remove<T>(subscriber: T)
+
+    /// Removes all objects from the list of subscribers on the event bus.
+    ///
+    /// ```
+    /// protocol MyEvent {
+    ///     // ...
+    /// }
+    ///
+    /// let eventBus = EventBus()
+    /// // ...
+    /// eventBus.add(subscriber: subscriber, for: MyEvent.self)
+    /// // ...
+    /// eventBus.removeAllSubscribers()
+    /// ```
     func removeAllSubscribers()
 }
 
+/// A reduced type-erased interface for EventBus
+/// for selectively exposing its event-chaining capabilities.
 public protocol EventChainable: class {
+    /// Attaches a second event bus chained to the event bus.
+    ///
+    /// - Note:
+    ///   - Notified events get copy-forwarded to attached chains.
+    ///
+    /// - Parameters
+    ///   - chain: the event bus to attach
+    ///
+    /// ```
+    /// let eventBus = EventBus()
+    /// let chainedEventBus = EventBus()
+    /// // ...
+    /// eventBus.attach(chain: chainedEventBus)
+    /// ```
     func attach(chain: EventNotifiable)
+
+    /// Detaches a second event bus from the event bus.
+    ///
+    /// - Parameters
+    ///   - chain: the event bus to detach
+    ///
+    /// ```
+    /// let eventBus = EventBus()
+    /// let chainedEventBus = EventBus()
+    /// // ...
+    /// eventBus.attach(chain: chainedEventBus)
+    /// // ...
+    /// eventBus.detach(chain: chainedEventBus)
+    /// ```
     func detach(chain: EventNotifiable)
+
+    /// Detaches all attached event busses from the event bus.
+    ///
+    /// - Parameters
+    ///   - chain: the event bus to detach
+    ///
+    /// ```
+    /// let eventBus = EventBus()
+    /// let chainedEventBus = EventBus()
+    /// // ...
+    /// eventBus.attach(chain: chainedEventBus)
+    /// // ...
+    /// eventBus.detachAllChains()
     func detachAllChains()
 }
 
+/// A reduced type-erased interface for EventBus
+/// for selectively exposing its event-notification capabilities.
 public protocol EventNotifiable: class {
+
+    /// Notifies all subscribers (and chained event busses)
+    ///
+    /// - Parameters:
+    ///   - eventType: the event type for which to notify subscribers for
+    ///   - closure: the closure to perform on subscribers for the given event type
+    ///
+    /// ```
+    /// protocol MyEvent {
+    ///     func handle(value: Int)
+    /// }
+    ///
+    /// let eventBus = EventBus()
+    /// // ...
+    /// eventBus.add(subscriber: subscriber, for: MyEvent.self)
+    /// // ...
+    /// eventBus.notify(MyEvent.self) { subscriber in
+    ///     subscriber.handle(value: 42)
+    /// }
+    /// ```
     func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ())
 }
 
+/// Options for configuring the behavior of a given EventBus.
 public struct Options: OptionSet {
 
+    /// See protocol `OptionSet`
     public let rawValue: Int
 
+    /// See protocol `OptionSet`
     public init(rawValue: Int) {
         self.rawValue = rawValue
     }
 
+    /// Print a warning whenever an event gets subscribed to or notified that has not previously
+    /// been registered (i.e. via `eventBus.register(forEvent: MyEvent.self)`) with the event bus.
+    ///
+    /// - Note:
+    ///   Warnings are only emitted if either a `DEBUG` flag is present:
+    ///
+    ///   The specific behavior is as follows:
+    /// ```
+    /// #if DEBUG
+    ///     fatalError(message)
+    /// #else
+    ///     print(message)
+    /// #endif
+    /// ```
     public static let warnUnknown = Options(rawValue: 1 << 0)
 
+    /// Print a warning whenever an event gets subscribed to or notified that has not previously
+    /// been registered (i.e. via `eventBus.register(forEvent: MyEvent.self)`) with the event bus.
+    ///
+    /// - Note:
+    ///   Warnings are only emitted if either a `DEBUG` flag is present:
+    ///
+    ///   The specific behavior is as follows:
+    /// ```
+    /// #if DEBUG
+    ///     fatalError(message)
+    /// #else
+    ///     print(message)
+    /// #endif
+    /// ```
     public static let warnDropped = Options(rawValue: 1 << 1)
 
+    /// Print a log of emitted events for a given event bus.
     public static let logEvents = Options(rawValue: 1 << 2)
 }
 
+/// A type-safe event bus
 public class EventBus {
 
     internal struct WeakBox: Hashable {
@@ -65,8 +249,10 @@ public class EventBus {
         }
     }
 
+    /// A global shared event bus configured using default options.
     public static let shared: EventBus = EventBus()
 
+    /// The event bus' configuration options
     public let options: Options
 
     fileprivate var registered: [ObjectIdentifier: String] = [:]
@@ -85,6 +271,11 @@ public class EventBus {
         }
     }
 
+    /// Creates an event bus with a given configuration and dispatch queue
+    ///
+    /// - Parameters:
+    ///   - options: the event bus' options
+    ///   - queue: the dispatch queue to notify subscribers on
     public init(options: Options? = nil, queue: DispatchQueue = .global()) {
         self.queue = queue
         self.options = options ?? Options()
