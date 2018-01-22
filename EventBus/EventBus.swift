@@ -227,7 +227,7 @@ public struct Options: OptionSet {
     public static let logEvents = Options(rawValue: 1 << 2)
 }
 
-/// A type-safe event bus
+/// A type-safe event bus.
 public class EventBus {
 
     internal struct WeakBox: Hashable {
@@ -252,7 +252,7 @@ public class EventBus {
     /// A global shared event bus configured using default options.
     public static let shared: EventBus = EventBus()
 
-    /// The event bus' configuration options
+    /// The event bus' configuration options.
     public let options: Options
 
     fileprivate var registered: [ObjectIdentifier: String] = [:]
@@ -271,7 +271,7 @@ public class EventBus {
         }
     }
 
-    /// Creates an event bus with a given configuration and dispatch queue
+    /// Creates an event bus with a given configuration and dispatch queue.
     ///
     /// - Parameters:
     ///   - options: the event bus' options
