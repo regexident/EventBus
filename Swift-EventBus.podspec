@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'Swift-EventBus'
-  s.version          = '0.1.2'
+  s.version          = '0.2.0'
   s.summary          = 'A safe-by-default pure Swift notification center.'
 
   s.description      = <<-DESC
