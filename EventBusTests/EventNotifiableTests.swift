@@ -47,12 +47,64 @@ class EventNotifiableTests: XCTestCase {
         let fooBarMock = FooBarMock { event in
             switch event {
             case .foo: expectation.fulfill()
-            case .bar: XCTFail("Should not have called `BarMockable` on subscriber")
+            case _: XCTFail("Should not have called `BarMockable` on subscriber")
             }
         }
 
         let eventBus = EventBus()
         eventBus.add(subscriber: fooBarMock, for: FooMockable.self)
+        eventBus.notify(FooMockable.self) { subscriber in
+            subscriber.foo()
+        }
+
+        self.waitForExpectations(timeout: 1.0)
+    }
+
+    func testNotifyOnUnknownEventEmitsError() {
+        let expectation = self.expectation(description: "")
+
+        let errorHandlerMock = ErrorHandlerMock { error in
+            switch error {
+            case .unknownEvent: expectation.fulfill()
+            case _: XCTFail("Should not have emitted `.unknownEvent` on handler")
+            }
+        }
+
+        let eventBus = EventBus(options: .warnUnknown)
+        eventBus.register(forEvent: BarMockable.self)
+        eventBus.errorHandler = errorHandlerMock
+        eventBus.notify(FooMockable.self) { _ in }
+
+        self.waitForExpectations(timeout: 1.0)
+    }
+
+    func testDropOnNotifiedEventEmitsError() {
+        let expectation = self.expectation(description: "")
+
+        let errorHandlerMock = ErrorHandlerMock { error in
+            switch error {
+            case .droppedEvent: expectation.fulfill()
+            case _: XCTFail("Should not have emitted `.droppedEvent` on handler")
+            }
+        }
+
+        let eventBus = EventBus(options: .warnDropped)
+        eventBus.errorHandler = errorHandlerMock
+        eventBus.notify(FooMockable.self) { _ in }
+
+        self.waitForExpectations(timeout: 1.0)
+    }
+
+    func testNotifyEmitsLog() {
+        let expectation = self.expectation(description: "")
+
+        let logHandler = LogHandlerMock {
+            expectation.fulfill()
+        }
+
+        let eventBus = EventBus(options: .logEvents)
+        eventBus.logHandler = logHandler
+
         eventBus.notify(FooMockable.self) { subscriber in
             subscriber.foo()
         }

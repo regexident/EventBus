@@ -8,6 +8,8 @@
 
 import Foundation
 
+@testable import EventBus
+
 protocol FooStubable {}
 protocol BarStubable {}
 
@@ -15,18 +17,20 @@ class FooStub: FooStubable {}
 class BarStub: BarStubable {}
 class FooBarStub: FooStubable, BarStubable {}
 
-enum Event { case foo, bar }
+enum MockEvent { case foo, bar }
 
 protocol FooMockable { func foo() }
 protocol BarMockable { func bar() }
 
 class Mock {
-    fileprivate let closure: (Event) -> ()
+    fileprivate let closure: (MockEvent) -> ()
 
-    init(closure: ((Event) -> ())? = nil) {
+    init(closure: ((MockEvent) -> ())? = nil) {
         self.closure = closure ?? { _ in }
     }
 }
+
+struct InvalidFooStub: FooStubable {}
 
 class FooMock: Mock, FooMockable {
     func foo() { self.closure(.foo) }
@@ -39,4 +43,38 @@ class BarMock: Mock, BarMockable {
 class FooBarMock: Mock, FooMockable, BarMockable {
     func foo() { self.closure(.foo) }
     func bar() { self.closure(.bar) }
+}
+
+enum MockError { case unknownEvent, droppedEvent, invalidSubscriber }
+
+class ErrorHandlerMock: ErrorHandler {
+    fileprivate let closure: (MockError) -> ()
+
+    init(closure: ((MockError) -> ())? = nil) {
+        self.closure = closure ?? { _ in }
+    }
+
+    func eventBus<T>(_ eventBus: EventBus, receivedUnknownEvent eventType: T.Type) {
+        self.closure(.unknownEvent)
+    }
+
+    func eventBus<T>(_ eventBus: EventBus, droppedUnhandledEvent eventType: T.Type) {
+        self.closure(.droppedEvent)
+    }
+
+    func eventBus<T>(_ eventBus: EventBus, receivedNonClassSubscriber subscriberType: T.Type) {
+        self.closure(.invalidSubscriber)
+    }
+}
+
+class LogHandlerMock: LogHandler {
+    fileprivate let closure: () -> ()
+
+    init(closure: (() -> ())? = nil) {
+        self.closure = closure ?? { _ in }
+    }
+
+    func eventBus<T>(_ eventBus: EventBus, receivedEvent eventType: T.Type) {
+        self.closure()
+    }
 }

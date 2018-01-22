@@ -130,4 +130,75 @@ class EventSubscribableTests: XCTestCase {
         XCTAssertFalse(eventBus.has(subscriber: fooBarStub, for: FooStubable.self))
         XCTAssertFalse(eventBus.has(subscriber: fooBarStub, for: BarStubable.self))
     }
+
+    func testAddingNonClassSubscriberToEventEmitsError() {
+        let expectation = self.expectation(description: "")
+
+        let errorHandlerMock = ErrorHandlerMock { error in
+            switch error {
+            case .invalidSubscriber: expectation.fulfill()
+            case _: XCTFail("Should not have emitted `.invalidSubscriber` on handler")
+            }
+        }
+
+        let eventBus = EventBus()
+        eventBus.errorHandler = errorHandlerMock
+        eventBus.add(subscriber: InvalidFooStub(), for: FooStubable.self)
+
+        self.waitForExpectations(timeout: 1.0)
+    }
+
+    func testRemovingNonClassSubscriberFromEventEmitsError() {
+        let expectation = self.expectation(description: "")
+
+        let errorHandlerMock = ErrorHandlerMock { error in
+            switch error {
+            case .invalidSubscriber: expectation.fulfill()
+            case _: XCTFail("Should not have emitted `.invalidSubscriber` on handler")
+            }
+        }
+
+        let eventBus = EventBus()
+        eventBus.errorHandler = errorHandlerMock
+        eventBus.remove(subscriber: InvalidFooStub(), for: FooStubable.self)
+
+        self.waitForExpectations(timeout: 1.0)
+    }
+
+    func testRemovingNonClassSubscriberEmitsError() {
+        let expectation = self.expectation(description: "")
+
+        let errorHandlerMock = ErrorHandlerMock { error in
+            switch error {
+            case .invalidSubscriber: expectation.fulfill()
+            case _: XCTFail("Should not have emitted `.invalidSubscriber` on handler")
+            }
+        }
+
+        let eventBus = EventBus()
+        eventBus.errorHandler = errorHandlerMock
+        eventBus.remove(subscriber: InvalidFooStub())
+
+        self.waitForExpectations(timeout: 1.0)
+    }
+
+    func testSubscriptionOfUnknownEventEmitsError() {
+        let expectation = self.expectation(description: "")
+
+        let fooStub = FooStub()
+
+        let errorHandlerMock = ErrorHandlerMock { error in
+            switch error {
+            case .unknownEvent: expectation.fulfill()
+            case _: XCTFail("Should not have emitted `.unknownEvent` on handler")
+            }
+        }
+
+        let eventBus = EventBus(options: .warnUnknown)
+        eventBus.register(forEvent: BarMockable.self)
+        eventBus.errorHandler = errorHandlerMock
+        eventBus.add(subscriber: fooStub, for: FooStubable.self)
+
+        self.waitForExpectations(timeout: 1.0)
+    }
 }
