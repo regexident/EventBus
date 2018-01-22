@@ -227,6 +227,61 @@ public struct Options: OptionSet {
     public static let logEvents = Options(rawValue: 1 << 2)
 }
 
+internal protocol ErrorHandler {
+    func eventBus<T>(_ eventBus: EventBus, receivedUnknownEvent eventType: T.Type)
+    func eventBus<T>(_ eventBus: EventBus, droppedUnhandledEvent eventType: T.Type)
+    func eventBus<T>(_ eventBus: EventBus, receivedNonClassSubscriber subscriberType: T.Type)
+}
+
+internal struct DefaultErrorHandler: ErrorHandler {
+    func eventBus<T>(_ eventBus: EventBus, receivedUnknownEvent eventType: T.Type) {
+        #if DEBUG
+            let eventTypes = eventBus.registeredEventTypes
+            let eventNames = eventTypes.lazy.map { "\($0)" }.joined(separator: ", ")
+            let message = "\(eventBus): Expected event of registered type (e.g. \(eventNames)), found: \(eventType)."
+            #if EVENTBUS_STRICT
+                fatalError(message)
+            #else
+                print(message)
+            #endif
+        #endif
+    }
+
+    func eventBus<T>(_ eventBus: EventBus, droppedUnhandledEvent eventType: T.Type) {
+        #if DEBUG
+            let message = "\(eventBus): Event of type '\(eventType)' was not handled."
+            #if EVENTBUS_STRICT
+                fatalError(message)
+            #else
+                print(message)
+            #endif
+        #endif
+    }
+
+    func eventBus<T>(_ eventBus: EventBus, receivedNonClassSubscriber subscriberType: T.Type) {
+        #if DEBUG
+            let message = "\(eventBus): Expected class, found struct/enum: \(subscriberType)."
+            #if EVENTBUS_STRICT
+                fatalError(message)
+            #else
+                print(message)
+            #endif
+        #endif
+    }
+}
+
+internal protocol LogHandler {
+    func eventBus<T>(_ eventBus: EventBus, receivedEvent: T.Type)
+}
+
+internal struct DefaultLogHandler: LogHandler {
+    func eventBus<T>(_ eventBus: EventBus, receivedEvent eventType: T.Type) {
+        #if DEBUG
+            print("\(eventBus): Received event '\(eventType)'.")
+        #endif
+    }
+}
+
 /// A type-safe event bus.
 public class EventBus {
 
@@ -255,21 +310,15 @@ public class EventBus {
     /// The event bus' configuration options.
     public let options: Options
 
-    fileprivate var registered: [ObjectIdentifier: String] = [:]
+    internal var errorHandler: ErrorHandler = DefaultErrorHandler()
+    internal var logHandler: LogHandler = DefaultLogHandler()
+
+    fileprivate var registered: [ObjectIdentifier: Any] = [:]
     fileprivate var subscribed: [ObjectIdentifier: Set<WeakBox>] = [:]
     fileprivate var chained: Set<WeakBox> = []
 
     fileprivate let serialQueue: DispatchQueue = DispatchQueue(label: "com.regexident.eventbus")
     fileprivate let queue: DispatchQueue
-
-    private var nameAndAddress: String {
-        var mutableSelf = self
-        return Swift.withUnsafePointer(to: &mutableSelf) { pointer in
-            let name = String(describing: type(of: self))
-            let address = String(format: "%p", pointer)
-            return "<\(name): \(address)>"
-        }
-    }
 
     /// Creates an event bus with a given configuration and dispatch queue.
     ///
@@ -281,57 +330,44 @@ public class EventBus {
         self.options = options ?? Options()
     }
 
-    fileprivate func validateSubscriber<T>(subscriber: T) {
+    /// The event types the event bus is registered for.
+    public var registeredEventTypes: [Any] {
+        return Array(self.registered.values)
+    }
+
+    fileprivate func warnIfNonClass<T>(_ subscriber: T) {
         // Related bug: https://bugs.swift.org/browse/SR-4420:
-        if !(type(of: subscriber as Any) is AnyClass) {
-            let message = "Expected class, found struct/enum: \(subscriber)"
-            #if DEBUG && EVENTBUS_STRICT
-                fatalError(message)
-            #elseif DEBUG || EVENTBUS_STRICT
-                print(message)
-            #endif
+        guard !(type(of: subscriber as Any) is AnyClass) else {
+            return
         }
+        self.errorHandler.eventBus(self, receivedNonClassSubscriber: type(of: subscriber))
     }
 
     fileprivate func warnIfUnknown<T>(_ eventType: T.Type) {
-        let identifier = ObjectIdentifier(eventType)
         guard self.options.contains(.warnUnknown) else {
             return
         }
-        guard self.registered[identifier] != nil else {
+        guard self.registered[ObjectIdentifier(eventType)] == nil else {
             return
         }
-        let names = Array(self.registered.values).joined(separator: ", ")
-        let message = "\(self.nameAndAddress): Expected event of registered type (e.g. \(names)), found: \(eventType)"
-        #if DEBUG && EVENTBUS_STRICT
-            fatalError(message)
-        #elseif DEBUG
-            print(message)
-        #endif
+        self.errorHandler.eventBus(self, receivedUnknownEvent: eventType)
     }
 
     fileprivate func warnIfDropped<T>(_ eventType: T.Type) {
-        let identifier = ObjectIdentifier(eventType)
         guard self.options.contains(.warnDropped) else {
             return
         }
-        guard self.subscribed[identifier] == nil else {
+        guard self.subscribed[ObjectIdentifier(eventType)] == nil else {
             return
         }
-        let message = "\(self.nameAndAddress): Event of type '\(eventType)' was not handled."
-        #if DEBUG && EVENTBUS_STRICT
-            fatalError(message)
-        #elseif DEBUG
-            print(message)
-        #endif
+        self.errorHandler.eventBus(self, droppedUnhandledEvent: eventType)
     }
 
     fileprivate func logEvent<T>(_ eventType: T.Type) {
-        #if DEBUG
-            if self.options.contains(.logEvents) {
-                print("\(self.nameAndAddress): Received event '\(eventType)'")
-            }
-        #endif
+        guard self.options.contains(.logEvents) else {
+            return
+        }
+        self.logHandler.eventBus(self, receivedEvent: eventType)
     }
 
     fileprivate func pruned<T>(subscribed: Set<WeakBox>, for eventType: T.Type) -> Set<WeakBox>? {
@@ -349,7 +385,7 @@ extension EventBus: EventRegistrable {
 
 extension EventBus: EventSubscribable {
     public func add<T>(subscriber: T, for eventType: T.Type) {
-        self.validateSubscriber(subscriber: subscriber)
+        self.warnIfNonClass(subscriber)
         self.warnIfUnknown(eventType)
         self.serialQueue.sync {
             let identifier = ObjectIdentifier(eventType)
@@ -361,7 +397,7 @@ extension EventBus: EventSubscribable {
     }
 
     public func remove<T>(subscriber: T, for eventType: T.Type) {
-        self.validateSubscriber(subscriber: subscriber)
+        self.warnIfNonClass(subscriber)
         self.warnIfUnknown(eventType)
         self.serialQueue.sync {
             let identifier = ObjectIdentifier(eventType)
@@ -373,7 +409,7 @@ extension EventBus: EventSubscribable {
     }
 
     public func remove<T>(subscriber: T) {
-        self.validateSubscriber(subscriber: subscriber)
+        self.warnIfNonClass(subscriber)
         self.serialQueue.sync {
             for (identifier, var subscribed) in self.subscribed {
                 let weakBox = WeakBox(subscriber as AnyObject)
@@ -390,19 +426,14 @@ extension EventBus: EventSubscribable {
     }
 
     internal func has<T>(subscriber: T, for eventType: T.Type) -> Bool {
-        var result: Bool = false
-        self.validateSubscriber(subscriber: subscriber)
+        self.warnIfNonClass(subscriber)
         self.warnIfUnknown(eventType)
-        self.serialQueue.sync {
-            let identifier = ObjectIdentifier(eventType)
-            guard let subscribed = self.subscribed[identifier] else {
-                result = false
-                return
+        return self.serialQueue.sync {
+            guard let subscribed = self.subscribed[ObjectIdentifier(eventType)] else {
+                return false
             }
-            result = subscribed.contains { $0.inner === (subscriber as AnyObject) }
-            return
+            return subscribed.contains { $0.inner === (subscriber as AnyObject) }
         }
-        return result
     }
 }
 
@@ -464,5 +495,16 @@ extension EventBus: EventChainable {
             return
         }
         return result
+    }
+}
+
+extension EventBus: CustomStringConvertible {
+    public var description: String {
+        var mutableSelf = self
+        return Swift.withUnsafePointer(to: &mutableSelf) { pointer in
+            let name = String(describing: type(of: mutableSelf))
+            let address = String(format: "%p", pointer)
+            return "<\(name): \(address)>"
+        }
     }
 }
