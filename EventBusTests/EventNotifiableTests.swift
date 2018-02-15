@@ -88,7 +88,7 @@ class EventNotifiableTests: XCTestCase {
             }
         }
 
-        let eventBus = EventBus(options: .warnDropped)
+        let eventBus = EventBus(options: .warnUnhandled)
         eventBus.errorHandler = errorHandlerMock
         eventBus.notify(FooMockable.self) { _ in }
 

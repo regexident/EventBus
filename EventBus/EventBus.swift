@@ -177,7 +177,8 @@ public protocol EventNotifiable: class {
     ///     subscriber.handle(value: 42)
     /// }
     /// ```
-    func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ())
+    @discardableResult
+    func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ()) -> Bool
 }
 
 /// Options for configuring the behavior of a given EventBus.
@@ -195,15 +196,10 @@ public struct Options: OptionSet {
     /// been registered (i.e. via `eventBus.register(forEvent: MyEvent.self)`) with the event bus.
     ///
     /// - Note:
-    ///   Warnings are only emitted if the `DEBUG` compiler flag is present:
+    ///   Warning logs are only emitted if the `DEBUG` compiler flag is present.
     ///
-    ///   The specific behavior is as follows:
-    /// ```
-    /// if EventBus.isStrict {
-    ///     fatalError(message)
-    /// } else {
-    ///     print(message)
-    /// }
+    ///   By setting `EventBus.isStrict = true` you can catch the error using
+    ///   a "Swift Error Breakpoint" on type `StrictnessError`.
     /// ```
     public static let warnUnknown = Options(rawValue: 1 << 0)
 
@@ -211,17 +207,12 @@ public struct Options: OptionSet {
     /// been registered (i.e. via `eventBus.register(forEvent: MyEvent.self)`) with the event bus.
     ///
     /// - Note:
-    ///   Warnings are only emitted if the `DEBUG` compiler flag is present:
+    ///   Warning logs are only emitted if the `DEBUG` compiler flag is present.
     ///
-    ///   The specific behavior is as follows:
+    ///   By setting `EventBus.isStrict = true` you can catch the error using
+    ///   a "Swift Error Breakpoint" on type `StrictnessError`.
     /// ```
-    /// if EventBus.isStrict {
-    ///     fatalError(message)
-    /// } else {
-    ///     print(message)
-    /// }
-    /// ```
-    public static let warnDropped = Options(rawValue: 1 << 1)
+    public static let warnUnhandled = Options(rawValue: 1 << 1)
 
     /// Print a log of emitted events for a given event bus.
     public static let logEvents = Options(rawValue: 1 << 2)
@@ -234,37 +225,49 @@ internal protocol ErrorHandler {
 }
 
 internal struct DefaultErrorHandler: ErrorHandler {
-    func eventBus<T>(_ eventBus: EventBus, receivedUnknownEvent eventType: T.Type) {
+    @inline(__always)
+    internal func eventBus<T>(_ eventBus: EventBus, receivedUnknownEvent eventType: T.Type) {
         #if DEBUG
             let eventTypes = eventBus.registeredEventTypes
             let eventNames = eventTypes.lazy.map { "\($0)" }.joined(separator: ", ")
             let message = "\(eventBus): Expected event of registered type (e.g. \(eventNames)), found: \(eventType)."
+            print(message)
             if EventBus.isStrict {
-                fatalError(message)
-            } else {
-                print(message)
+                do {
+                    throw StrictnessError.unknownEvent
+                } catch {
+                    // Use a "Swift Error Breakpoint" on type "StrictnessError" to catch.
+                }
             }
         #endif
     }
 
-    func eventBus<T>(_ eventBus: EventBus, droppedUnhandledEvent eventType: T.Type) {
+    @inline(__always)
+    internal func eventBus<T>(_ eventBus: EventBus, droppedUnhandledEvent eventType: T.Type) {
         #if DEBUG
             let message = "\(eventBus): Event of type '\(eventType)' was not handled."
+            print(message)
             if EventBus.isStrict {
-                fatalError(message)
-            } else {
-                print(message)
+                do {
+                    throw StrictnessError.unhandledEvent
+                } catch {
+                    // Use a "Swift Error Breakpoint" on type "StrictnessError" to catch.
+                }
             }
         #endif
     }
 
-    func eventBus<T>(_ eventBus: EventBus, receivedNonClassSubscriber subscriberType: T.Type) {
+    @inline(__always)
+    internal func eventBus<T>(_ eventBus: EventBus, receivedNonClassSubscriber subscriberType: T.Type) {
         #if DEBUG
             let message = "\(eventBus): Expected class, found struct/enum: \(subscriberType)."
+            print(message)
             if EventBus.isStrict {
-                fatalError(message)
-            } else {
-                print(message)
+                do {
+                    throw StrictnessError.invalidSubscriber
+                } catch {
+                    // Use a "Swift Error Breakpoint" on type "StrictnessError" to catch.
+                }
             }
         #endif
     }
@@ -355,11 +358,8 @@ public class EventBus {
         self.errorHandler.eventBus(self, receivedUnknownEvent: eventType)
     }
 
-    fileprivate func warnIfDropped<T>(_ eventType: T.Type) {
-        guard self.options.contains(.warnDropped) else {
-            return
-        }
-        guard self.subscribed[ObjectIdentifier(eventType)] == nil else {
+    fileprivate func warnUnhandled<T>(_ eventType: T.Type) {
+        guard self.options.contains(.warnUnhandled) else {
             return
         }
         self.errorHandler.eventBus(self, droppedUnhandledEvent: eventType)
@@ -376,6 +376,12 @@ public class EventBus {
         let filtered = subscribed.lazy.filter { $0.inner is T }
         return filtered.isEmpty ? nil : Set(filtered)
     }
+}
+
+fileprivate enum StrictnessError: Error {
+    case invalidSubscriber
+    case unknownEvent
+    case unhandledEvent
 }
 
 extension EventBus: EventRegistrable {
@@ -440,28 +446,34 @@ extension EventBus: EventSubscribable {
 }
 
 extension EventBus: EventNotifiable {
-    public func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ()) {
+    @discardableResult
+    public func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ()) -> Bool {
         self.warnIfUnknown(eventType)
-        self.warnIfDropped(eventType)
         self.logEvent(eventType)
+        var handled: Int = 0
         self.serialQueue.sync {
             let identifier = ObjectIdentifier(eventType)
             defer {
-                for eventBus in self.chained.lazy.flatMap({ $0.inner as? EventNotifiable }) {
-                    self.queue.async {
-                        eventBus.notify(eventType, closure: closure)
-                    }
+                let chainedEventBuses = self.chained.lazy.flatMap({ $0.inner as? EventNotifiable })
+                for eventBus in chainedEventBuses {
+                    handled += eventBus.notify(eventType, closure: closure) ? 1 : 0
                 }
             }
             guard let subscribed = self.subscribed[identifier] else {
                 return
             }
-            for subscriber in subscribed.lazy.flatMap({ $0.inner as? T }) {
+            let subscribers = subscribed.flatMap({ $0.inner as? T })
+            for subscriber in subscribers {
                 self.queue.async {
                     closure(subscriber)
                 }
             }
+            handled += subscribers.count
         }
+        if handled == 0 {
+            self.warnUnhandled(eventType)
+        }
+        return handled > 0
     }
 }
 

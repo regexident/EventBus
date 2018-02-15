@@ -15,16 +15,18 @@ protocol Event {
 }
 
 class Subscriber {
+    let eventSubscribable: EventSubscribable
     let view: UIView
 
-    init(view: UIView) {
+    init(eventSubscribable: EventSubscribable, view: UIView) {
+        self.eventSubscribable = eventSubscribable
         self.view = view
 
-        EventBus.shared.add(subscriber: self, for: Event.self)
+        self.eventSubscribable.add(subscriber: self, for: Event.self)
     }
 }
 
-extension Subscriber : Event {
+extension Subscriber: Event {
     func handle(after delay: TimeInterval) {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             let backgroundColor = self.view.backgroundColor
@@ -67,7 +69,7 @@ class ViewController: UIViewController {
     @IBOutlet var diagramView: UIImageView!
     @IBOutlet var containerView: UIView!
 
-    let eventBus = EventBus.shared
+    let eventBus: EventBus = .init(options: [.warnUnhandled])
     var timer: Timer!
 
     var subscribers: [Subscriber] = []
@@ -76,9 +78,9 @@ class ViewController: UIViewController {
         super.viewDidLoad()
 
         self.subscribers = [
-            Subscriber(view: self.subscriberViewTop),
-            Subscriber(view: self.subscriberViewMiddle),
-            Subscriber(view: self.subscriberViewBottom),
+            Subscriber(eventSubscribable: eventBus, view: self.subscriberViewTop),
+            Subscriber(eventSubscribable: eventBus, view: self.subscriberViewMiddle),
+            Subscriber(eventSubscribable: eventBus, view: self.subscriberViewBottom),
         ]
 
         self.timer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
