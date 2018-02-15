@@ -195,15 +195,15 @@ public struct Options: OptionSet {
     /// been registered (i.e. via `eventBus.register(forEvent: MyEvent.self)`) with the event bus.
     ///
     /// - Note:
-    ///   Warnings are only emitted if either a `DEBUG` or `EVENTBUS_STRICT` compiler flag is present:
+    ///   Warnings are only emitted if the `DEBUG` compiler flag is present:
     ///
     ///   The specific behavior is as follows:
     /// ```
-    /// #if DEBUG && EVENTBUS_STRICT
+    /// if EventBus.isStrict {
     ///     fatalError(message)
-    /// #elseif DEBUG
+    /// } else {
     ///     print(message)
-    /// #endif
+    /// }
     /// ```
     public static let warnUnknown = Options(rawValue: 1 << 0)
 
@@ -211,15 +211,15 @@ public struct Options: OptionSet {
     /// been registered (i.e. via `eventBus.register(forEvent: MyEvent.self)`) with the event bus.
     ///
     /// - Note:
-    ///   Warnings are only emitted if either a `DEBUG` or `EVENTBUS_STRICT` compiler flag is present:
+    ///   Warnings are only emitted if the `DEBUG` compiler flag is present:
     ///
     ///   The specific behavior is as follows:
     /// ```
-    /// #if DEBUG && EVENTBUS_STRICT
+    /// if EventBus.isStrict {
     ///     fatalError(message)
-    /// #elseif DEBUG
+    /// } else {
     ///     print(message)
-    /// #endif
+    /// }
     /// ```
     public static let warnDropped = Options(rawValue: 1 << 1)
 
@@ -239,33 +239,33 @@ internal struct DefaultErrorHandler: ErrorHandler {
             let eventTypes = eventBus.registeredEventTypes
             let eventNames = eventTypes.lazy.map { "\($0)" }.joined(separator: ", ")
             let message = "\(eventBus): Expected event of registered type (e.g. \(eventNames)), found: \(eventType)."
-            #if EVENTBUS_STRICT
+            if EventBus.isStrict {
                 fatalError(message)
-            #else
+            } else {
                 print(message)
-            #endif
+            }
         #endif
     }
 
     func eventBus<T>(_ eventBus: EventBus, droppedUnhandledEvent eventType: T.Type) {
         #if DEBUG
             let message = "\(eventBus): Event of type '\(eventType)' was not handled."
-            #if EVENTBUS_STRICT
+            if EventBus.isStrict {
                 fatalError(message)
-            #else
+            } else {
                 print(message)
-            #endif
+            }
         #endif
     }
 
     func eventBus<T>(_ eventBus: EventBus, receivedNonClassSubscriber subscriberType: T.Type) {
         #if DEBUG
             let message = "\(eventBus): Expected class, found struct/enum: \(subscriberType)."
-            #if EVENTBUS_STRICT
+            if EventBus.isStrict {
                 fatalError(message)
-            #else
+            } else {
                 print(message)
-            #endif
+            }
         #endif
     }
 }
@@ -303,6 +303,8 @@ public class EventBus {
             return ObjectIdentifier(inner).hashValue
         }
     }
+
+    public static var isStrict: Bool = false
 
     /// A global shared event bus configured using default options.
     public static let shared: EventBus = EventBus()
