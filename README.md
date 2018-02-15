@@ -93,21 +93,32 @@ class Subscriber : ValueChangeObserver {
 Sometimes it is desirable to have one event bus forward a carbon copy of all of its events to a second event bus. A possible scenario would be a proxy event bus that acts as a centralized facade to an arbitrary number of internal event buses.
 
 ```swift
+let proxyEventBus = EventBus()
+
 let eventBus1 = EventBus()
 let eventBus2 = EventBus()
-let proxyEventBus = EventBus()
-eventBus1.attach(chain: proxyEventBus)
-eventBus2.attach(chain: proxyEventBus)
+proxyEventBus.attach(chain: eventBus1, for SomeEvent.self)
+proxyEventBus.attach(chain: eventBus2, for SomeEvent.self)
 
-proxyEventBus.add(subscriber: subscriber, for: SomeProtocol.self)
+let subscriber1 = …
+let subscriber2 = …
+eventBus1.add(subscriber: subscriber1, for: SomeEvent.self)
+eventBus2.add(subscriber: subscriber2, for: SomeEvent.self)
+
+proxyEventBus.notify(SomeEvent.self) { subscriber in
+    // …
+}
+
+// subscriber1 & subscriber2 are getting notified
 ```
 
 For each event notified on either `eventBus1 ` or `eventBus2` a carbon copy will be forwarded to `proxyEventBus `.
 
 ### Encapsulation
 
-The API of EventBus is split up into three protocols:
+The API of EventBus is split up into these protocols:
 
+- `EventRegistrable`
 - `EventSubscribable`
 - `EventChainable`
 - `EventNotifiable`
@@ -115,8 +126,8 @@ The API of EventBus is split up into three protocols:
 This enables for ergonomic safe encapsulation …
 
 ```swift
-class Publisher {
-    var eventSubscribable: EventSubscribable {
+public class Publisher {
+    public var eventSubscribable: EventSubscribable {
         return self.eventBus
     }
 
@@ -127,6 +138,62 @@ class Publisher {
 ```
 
 … preventing anybody else from issuing notifications on `Publisher`'s event bus.
+
+## Debugging
+
+As there is no way to see from the type of `EventBus` which kind of events are to be expected to be received from it, or allowed to notified on it, **EventBus** provides optional measures for catching misuse early and as an aid in general debugging.
+
+### Debug subscription of unregistered event types:
+
+```swift
+let eventBus = EventBus(options: [.warnUnknown])
+eventBus.register(forEvent: FooEvent.self)
+
+// Needed to silence warning:
+// eventBus.register(forEvent: BarEvent.self)
+
+let subscriber = …
+eventBus.add(subscriber: subscriber, for: BarEvent.self)
+
+// Console:
+// Expected event of registered type (e.g. FooEvent), found: BarEvent.
+// Info: Use a "Swift Error Breakpoint" on type "EventBus.UnknownEventError" to catch.
+```
+
+### Debug notification of unregistered event types:
+
+```swift
+let eventBus = EventBus(options: [.warnUnknown])
+eventBus.register(forEvent: FooEvent.self)
+
+// Needed to silence warning:
+// eventBus.register(forEvent: BarEvent.self)
+
+eventBus.notify(FooEvent.self) { subscriber in
+	// …
+}
+
+// Console:
+// Expected event of registered type (e.g. FooEvent), found: BarEvent.
+// Info: Use a "Swift Error Breakpoint" on type "EventBus.UnknownEventError" to catch.
+```
+
+### Debug unhandled events:
+
+```swift
+let eventBus = EventBus(options: [.warnUnhandled])
+
+// Needed to silence warning:
+// eventBus.add(subscriber: …, for: FooEvent.self)
+
+eventBus.notify(FooEvent.self) { subscriber in
+	// …
+}
+
+// Console:
+// Expected event of registered type (e.g. FooEvent), found: BarEvent.
+// Info: Use a "Swift Error Breakpoint" on type "EventBus.UnhandledEventError" to catch.
+```
 
 ## Installation
 

@@ -58,7 +58,7 @@ class ErrorHandlerMock: ErrorHandler {
         self.closure(.unknownEvent)
     }
 
-    func eventBus<T>(_ eventBus: EventBus, unhandledEvent eventType: T.Type) {
+    func eventBus<T>(_ eventBus: EventBus, droppedUnhandledEvent eventType: T.Type) {
         self.closure(.droppedEvent)
     }
 
@@ -71,7 +71,7 @@ class LogHandlerMock: LogHandler {
     fileprivate let closure: () -> ()
 
     init(closure: (() -> ())? = nil) {
-        self.closure = closure ?? { _ in }
+        self.closure = closure ?? { }
     }
 
     func eventBus<T>(_ eventBus: EventBus, receivedEvent eventType: T.Type) {

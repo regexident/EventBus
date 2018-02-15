@@ -111,18 +111,35 @@ public protocol EventChainable: class {
     /// Attaches a second event bus chained to the event bus.
     ///
     /// - Note:
-    ///   - Notified events get copy-forwarded to attached chains.
+    ///   - Notified events on `self` get forwarded to chains attached for eventType.
     ///
     /// - Parameters
     ///   - chain: the event bus to attach
+    ///   - eventType: the event type for which to attach the chain for
     ///
     /// ```
     /// let eventBus = EventBus()
     /// let chainedEventBus = EventBus()
     /// // ...
-    /// eventBus.attach(chain: chainedEventBus)
+    /// eventBus.attach(chain: chainedEventBus, for: MyEvent.self)
     /// ```
-    func attach(chain: EventNotifiable)
+    func attach<T>(chain: EventNotifiable, for eventType: T.Type)
+
+    /// Detaches a chained event bus from the event bus for a given event type.
+    ///
+    /// - Parameters
+    ///   - chain: the event bus to attach
+    ///   - eventType: the event type for which to detach the chain from
+    ///
+    /// ```
+    /// let eventBus = EventBus()
+    /// let chainedEventBus = EventBus()
+    /// // ...
+    /// eventBus.attach(chain: chainedEventBus, for: MyEvent.self)
+    /// // ...
+    /// eventBus.detach(chain: chainedEventBus, for: MyEvent.self)
+    /// ```
+    func detach<T>(chain: EventNotifiable, for eventType: T.Type)
 
     /// Detaches a second event bus from the event bus.
     ///
@@ -133,7 +150,7 @@ public protocol EventChainable: class {
     /// let eventBus = EventBus()
     /// let chainedEventBus = EventBus()
     /// // ...
-    /// eventBus.attach(chain: chainedEventBus)
+    /// eventBus.attach(chain: chainedEventBus, for: MyEvent.self)
     /// // ...
     /// eventBus.detach(chain: chainedEventBus)
     /// ```
@@ -228,15 +245,18 @@ internal struct DefaultErrorHandler: ErrorHandler {
     @inline(__always)
     internal func eventBus<T>(_ eventBus: EventBus, receivedUnknownEvent eventType: T.Type) {
         #if DEBUG
+            typealias ErrorType = UnknownEventError
+            let errorName = String(describing: ErrorType.self)
             let eventTypes = eventBus.registeredEventTypes
             let eventNames = eventTypes.lazy.map { "\($0)" }.joined(separator: ", ")
-            let message = "\(eventBus): Expected event of registered type (e.g. \(eventNames)), found: \(eventType)."
-            print(message)
+            let namesString = eventNames.isEmpty ? "" : " (e.g. \(eventNames))"
+            print("\(eventBus): Expected event of registered type\(namesString), found: \(eventType).")
+            print("Info: Use a \"Swift Error Breakpoint\" on type \"EventBus.\(errorName)\" to catch.")
             if EventBus.isStrict {
                 do {
-                    throw StrictnessError.unknownEvent
+                    throw ErrorType()
                 } catch {
-                    // Use a "Swift Error Breakpoint" on type "StrictnessError" to catch.
+                    // intentionally left blank
                 }
             }
         #endif
@@ -245,13 +265,15 @@ internal struct DefaultErrorHandler: ErrorHandler {
     @inline(__always)
     internal func eventBus<T>(_ eventBus: EventBus, droppedUnhandledEvent eventType: T.Type) {
         #if DEBUG
-            let message = "\(eventBus): Event of type '\(eventType)' was not handled."
-            print(message)
+            typealias ErrorType = UnhandledEventError
+            let errorName = String(describing: ErrorType.self)
+            print("\(eventBus): Event of type '\(eventType)' was not handled.")
+            print("Info: Use a \"Swift Error Breakpoint\" on type \"EventBus.\(errorName)\" to catch.")
             if EventBus.isStrict {
                 do {
-                    throw StrictnessError.unhandledEvent
+                    throw ErrorType()
                 } catch {
-                    // Use a "Swift Error Breakpoint" on type "StrictnessError" to catch.
+                    // intentionally left blank
                 }
             }
         #endif
@@ -260,13 +282,15 @@ internal struct DefaultErrorHandler: ErrorHandler {
     @inline(__always)
     internal func eventBus<T>(_ eventBus: EventBus, receivedNonClassSubscriber subscriberType: T.Type) {
         #if DEBUG
-            let message = "\(eventBus): Expected class, found struct/enum: \(subscriberType)."
-            print(message)
+            typealias ErrorType = InvalidSubscriberError
+            let errorName = String(describing: ErrorType.self)
+            print("\(eventBus): Expected class, found struct/enum: \(subscriberType).")
+            print("Info: Use a \"Swift Error Breakpoint\" on type \"EventBus.\(errorName)\" to catch.")
             if EventBus.isStrict {
                 do {
-                    throw StrictnessError.invalidSubscriber
+                    throw ErrorType()
                 } catch {
-                    // Use a "Swift Error Breakpoint" on type "StrictnessError" to catch.
+                    // intentionally left blank
                 }
             }
         #endif
@@ -299,6 +323,10 @@ public class EventBus {
             return lhs.inner === rhs.inner
         }
 
+        internal static func == (lhs: WeakBox, rhs: AnyObject) -> Bool {
+            return lhs.inner === rhs
+        }
+
         internal var hashValue: Int {
             guard let inner = self.inner else {
                 return 0
@@ -306,6 +334,8 @@ public class EventBus {
             return ObjectIdentifier(inner).hashValue
         }
     }
+
+    typealias WeakSet = Set<WeakBox>
 
     public static var isStrict: Bool = false
 
@@ -318,9 +348,11 @@ public class EventBus {
     internal var errorHandler: ErrorHandler = DefaultErrorHandler()
     internal var logHandler: LogHandler = DefaultLogHandler()
 
-    fileprivate var registered: [ObjectIdentifier: Any] = [:]
-    fileprivate var subscribed: [ObjectIdentifier: Set<WeakBox>] = [:]
-    fileprivate var chained: Set<WeakBox> = []
+    fileprivate var knownTypes: [ObjectIdentifier: Any] = [:]
+
+    fileprivate var registered: Set<ObjectIdentifier> = []
+    fileprivate var subscribed: [ObjectIdentifier: WeakSet] = [:]
+    fileprivate var chained: [ObjectIdentifier: WeakSet] = [:]
 
     fileprivate let serialQueue: DispatchQueue = DispatchQueue(label: "com.regexident.eventbus")
     fileprivate let queue: DispatchQueue
@@ -337,9 +369,20 @@ public class EventBus {
 
     /// The event types the event bus is registered for.
     public var registeredEventTypes: [Any] {
-        return Array(self.registered.values)
+        return self.registered.flatMap { self.knownTypes[$0] }
     }
 
+    /// The event types the event bus has subscribers for.
+    public var subscribedEventTypes: [Any] {
+        return self.subscribed.keys.flatMap { self.knownTypes[$0] }
+    }
+
+    /// The event types the event bus has chains for.
+    public var chainedEventTypes: [Any] {
+        return self.chained.keys.flatMap { self.knownTypes[$0] }
+    }
+
+    @inline(__always)
     fileprivate func warnIfNonClass<T>(_ subscriber: T) {
         // Related bug: https://bugs.swift.org/browse/SR-4420:
         guard !(type(of: subscriber as Any) is AnyClass) else {
@@ -348,16 +391,18 @@ public class EventBus {
         self.errorHandler.eventBus(self, receivedNonClassSubscriber: type(of: subscriber))
     }
 
+    @inline(__always)
     fileprivate func warnIfUnknown<T>(_ eventType: T.Type) {
         guard self.options.contains(.warnUnknown) else {
             return
         }
-        guard self.registered[ObjectIdentifier(eventType)] == nil else {
+        guard !self.registered.contains(ObjectIdentifier(eventType)) else {
             return
         }
         self.errorHandler.eventBus(self, receivedUnknownEvent: eventType)
     }
 
+    @inline(__always)
     fileprivate func warnUnhandled<T>(_ eventType: T.Type) {
         guard self.options.contains(.warnUnhandled) else {
             return
@@ -365,6 +410,7 @@ public class EventBus {
         self.errorHandler.eventBus(self, droppedUnhandledEvent: eventType)
     }
 
+    @inline(__always)
     fileprivate func logEvent<T>(_ eventType: T.Type) {
         guard self.options.contains(.logEvents) else {
             return
@@ -372,22 +418,49 @@ public class EventBus {
         self.logHandler.eventBus(self, receivedEvent: eventType)
     }
 
-    fileprivate func pruned<T>(subscribed: Set<WeakBox>, for eventType: T.Type) -> Set<WeakBox>? {
-        let filtered = subscribed.lazy.filter { $0.inner is T }
-        return filtered.isEmpty ? nil : Set(filtered)
+    @inline(__always)
+    fileprivate func updateSubscribers<T>(for eventType: T.Type, closure: (inout WeakSet) -> ()) {
+        let identifier = ObjectIdentifier(eventType)
+        let subscribed = self.subscribed[identifier] ?? []
+        self.subscribed[identifier] = self.update(set: subscribed, closure: closure)
+        self.knownTypes[identifier] = String(describing: eventType)
+    }
+
+    @inline(__always)
+    fileprivate func updateChains<T>(for eventType: T.Type, closure: (inout WeakSet) -> ()) {
+        let identifier = ObjectIdentifier(eventType)
+        let chained = self.chained[identifier] ?? []
+        self.chained[identifier] = self.update(set: chained, closure: closure)
+        self.knownTypes[identifier] = String(describing: eventType)
+    }
+
+    @inline(__always)
+    fileprivate func update(set: WeakSet, closure: (inout WeakSet) -> ()) -> WeakSet? {
+        var mutableSet = set
+        closure(&mutableSet)
+        // Remove weak nil elements while we're at it:
+        let filteredSet = mutableSet.filter { $0.inner != nil }
+        return filteredSet.isEmpty ? nil : filteredSet
     }
 }
 
-fileprivate enum StrictnessError: Error {
-    case invalidSubscriber
-    case unknownEvent
-    case unhandledEvent
+internal struct InvalidSubscriberError: Error {
+    // intentionally left blank
+}
+
+internal struct UnknownEventError: Error {
+    // intentionally left blank
+}
+
+internal struct UnhandledEventError: Error {
+    // intentionally left blank
 }
 
 extension EventBus: EventRegistrable {
     public func register<T>(forEvent eventType: T.Type) {
         let identifier = ObjectIdentifier(eventType)
-        self.registered[identifier] = String(describing: eventType)
+        self.registered.insert(identifier)
+        self.knownTypes[identifier] = String(describing: eventType)
     }
 }
 
@@ -396,11 +469,9 @@ extension EventBus: EventSubscribable {
         self.warnIfNonClass(subscriber)
         self.warnIfUnknown(eventType)
         self.serialQueue.sync {
-            let identifier = ObjectIdentifier(eventType)
-            var subscribed = self.subscribed[identifier] ?? []
-            let weakBox = WeakBox(subscriber as AnyObject)
-            subscribed.insert(weakBox)
-            self.subscribed[identifier] = self.pruned(subscribed: subscribed, for: eventType)
+            self.updateSubscribers(for: eventType) { subscribed in
+                subscribed.insert(WeakBox(subscriber as AnyObject))
+            }
         }
     }
 
@@ -408,21 +479,19 @@ extension EventBus: EventSubscribable {
         self.warnIfNonClass(subscriber)
         self.warnIfUnknown(eventType)
         self.serialQueue.sync {
-            let identifier = ObjectIdentifier(eventType)
-            var subscribed = self.subscribed[identifier] ?? []
-            let weakBox = WeakBox(subscriber as AnyObject)
-            let _ = subscribed.remove(weakBox)
-            self.subscribed[identifier] = self.pruned(subscribed: subscribed, for: eventType)
+            self.updateSubscribers(for: eventType) { subscribed in
+                subscribed.remove(WeakBox(subscriber as AnyObject))
+            }
         }
     }
 
     public func remove<T>(subscriber: T) {
         self.warnIfNonClass(subscriber)
         self.serialQueue.sync {
-            for (identifier, var subscribed) in self.subscribed {
-                let weakBox = WeakBox(subscriber as AnyObject)
-                let _ = subscribed.remove(weakBox)
-                self.subscribed[identifier] = subscribed
+            for (identifier, subscribed) in self.subscribed {
+                self.subscribed[identifier] = self.update(set: subscribed) { subscribed in
+                    subscribed.remove(WeakBox(subscriber as AnyObject))
+                }
             }
         }
     }
@@ -450,65 +519,73 @@ extension EventBus: EventNotifiable {
     public func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ()) -> Bool {
         self.warnIfUnknown(eventType)
         self.logEvent(eventType)
-        var handled: Int = 0
-        self.serialQueue.sync {
+        return self.serialQueue.sync {
+            var handled: Int = 0
             let identifier = ObjectIdentifier(eventType)
-            defer {
-                let chainedEventBuses = self.chained.lazy.flatMap({ $0.inner as? EventNotifiable })
-                for eventBus in chainedEventBuses {
-                    handled += eventBus.notify(eventType, closure: closure) ? 1 : 0
+            // Notify our direct subscribers:
+            if let subscribers = self.subscribed[identifier] {
+                for subscriber in subscribers.lazy.flatMap({ $0.inner as? T }) {
+                    self.queue.async {
+                        closure(subscriber)
+                    }
+                }
+                handled += subscribers.count
+            }
+            // Notify our indirect subscribers:
+            if let chains = self.chained[identifier] {
+                for chain in chains.lazy.flatMap({ $0.inner as? EventNotifiable }) {
+                    handled += chain.notify(eventType, closure: closure) ? 1 : 0
                 }
             }
-            guard let subscribed = self.subscribed[identifier] else {
-                return
+            if handled == 0 {
+                self.warnUnhandled(eventType)
             }
-            let subscribers = subscribed.flatMap({ $0.inner as? T })
-            for subscriber in subscribers {
-                self.queue.async {
-                    closure(subscriber)
-                }
-            }
-            handled += subscribers.count
+            return handled > 0
         }
-        if handled == 0 {
-            self.warnUnhandled(eventType)
-        }
-        return handled > 0
     }
 }
 
 extension EventBus: EventChainable {
-    public func attach(chain: EventNotifiable) {
+    public func attach<T>(chain: EventNotifiable, for eventType: T.Type) {
         self.serialQueue.sync {
-            var chained = self.chained
-            chained.insert(WeakBox(chain as AnyObject))
-            self.chained = Set(chained.lazy.filter { $0.inner is EventNotifiable })
+            self.updateChains(for: eventType) { chained in
+                chained.insert(WeakBox(chain as AnyObject))
+            }
+        }
+    }
+
+    public func detach<T>(chain: EventNotifiable, for eventType: T.Type) {
+        self.serialQueue.sync {
+            self.updateChains(for: eventType) { chained in
+                chained.remove(WeakBox(chain as AnyObject))
+            }
         }
     }
 
     public func detach(chain: EventNotifiable) {
         self.serialQueue.sync {
-            var chained = self.chained
-            chained.remove(WeakBox(chain as AnyObject))
-            self.chained = Set(chained.lazy.filter { $0.inner is EventNotifiable })
+            for (identifier, chained) in self.chained {
+                self.chained[identifier] = self.update(set: chained) { chained in
+                    chained.remove(WeakBox(chain as AnyObject))
+                }
+            }
         }
     }
 
     public func detachAllChains() {
         self.serialQueue.sync {
-            self.chained = []
+            self.chained = [:]
         }
     }
 
-    internal func has(chain: EventNotifiable) -> Bool {
-        var result: Bool = false
-        self.serialQueue.sync {
-            result = self.chained.contains {
-                $0.inner === (chain as AnyObject)
+    internal func has<T>(chain: EventNotifiable, for eventType: T.Type) -> Bool {
+        self.warnIfUnknown(eventType)
+        return self.serialQueue.sync {
+            guard let chained = self.chained[ObjectIdentifier(eventType)] else {
+                return false
             }
-            return
+            return chained.contains { $0.inner === (chain as AnyObject) }
         }
-        return result
     }
 }
 
