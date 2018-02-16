@@ -52,6 +52,17 @@ public protocol EventSubscribable: class {
     /// ```
     func add<T>(subscriber: T, for eventType: T.Type)
 
+    /// Adds a given object to the list of subscribers of a given event type on the event bus.
+    ///
+    /// - Parameters:
+    ///   - subscriber: the subscriber to add to the event bus for the given event type
+    ///   - eventType: the event type to subscribe for
+    ///   - options: temporarily overwritten options for this call
+    ///
+    /// - SeeAlso:
+    ///   [add(subscriber:for)](EventBus.add(subscriber:for:))
+    func add<T>(subscriber: T, for eventType: T.Type, options: Options)
+
     /// Removes a given object from the list of subscribers of a given event type on the event bus.
     ///
     /// - Parameters:
@@ -71,6 +82,17 @@ public protocol EventSubscribable: class {
     /// ```
     func remove<T>(subscriber: T, for eventType: T.Type)
 
+    /// Removes a given object from the list of subscribers of a given event type on the event bus.
+    ///
+    /// - Parameters:
+    ///   - subscriber: the subscriber to remove from the event bus for the given event type
+    ///   - eventType: the event type to unsubscribe from
+    ///   - options: temporarily overwritten options for this call
+    ///
+    /// - SeeAlso:
+    ///   [remove(subscriber:for:)](EventBus.remove(subscriber:for:))
+    func remove<T>(subscriber: T, for eventType: T.Type, options: Options)
+
     /// Removes a given object from the list of subscribers on the event bus.
     ///
     /// - Parameters:
@@ -88,6 +110,17 @@ public protocol EventSubscribable: class {
     /// eventBus.remove(subscriber: subscriber)
     /// ```
     func remove<T>(subscriber: T)
+
+    /// Removes a given object from the list of subscribers on the event bus.
+    ///
+    /// - Parameters:
+    ///   - subscriber: the subscriber to remove from the event bus for all event types
+    ///   - options: temporarily overwritten options for this call
+    ///
+    /// - SeeAlso:
+    ///   [remove(subscriber:)](EventBus.remove(subscriber:))
+    /// ```
+    func remove<T>(subscriber: T, options: Options)
 
     /// Removes all objects from the list of subscribers on the event bus.
     ///
@@ -125,6 +158,20 @@ public protocol EventChainable: class {
     /// ```
     func attach<T>(chain: EventNotifiable, for eventType: T.Type)
 
+    /// Attaches a second event bus chained to the event bus.
+    ///
+    /// - Note:
+    ///   - Notified events on `self` get forwarded to chains attached for eventType.
+    ///
+    /// - Parameters
+    ///   - chain: the event bus to attach
+    ///   - eventType: the event type for which to attach the chain for
+    ///   - options: temporarily overwritten options for this call
+    ///
+    /// - SeeAlso:
+    ///   [attach(chain:for:)](EventBus.attach(chain:for:))
+    func attach<T>(chain: EventNotifiable, for eventType: T.Type, options: Options)
+
     /// Detaches a chained event bus from the event bus for a given event type.
     ///
     /// - Parameters
@@ -140,6 +187,17 @@ public protocol EventChainable: class {
     /// eventBus.detach(chain: chainedEventBus, for: MyEvent.self)
     /// ```
     func detach<T>(chain: EventNotifiable, for eventType: T.Type)
+
+    /// Detaches a chained event bus from the event bus for a given event type.
+    ///
+    /// - Parameters
+    ///   - chain: the event bus to attach
+    ///   - eventType: the event type for which to detach the chain from
+    ///   - options: temporarily overwritten options for this call
+    ///
+    /// - SeeAlso:
+    ///   [detach(chain:for:)](EventBus.detach(chain:for:))
+    func detach<T>(chain: EventNotifiable, for eventType: T.Type, options: Options)
 
     /// Detaches a second event bus from the event bus.
     ///
@@ -196,6 +254,18 @@ public protocol EventNotifiable: class {
     /// ```
     @discardableResult
     func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ()) -> Bool
+
+    /// Notifies all subscribers (and chained event busses)
+    ///
+    /// - Parameters:
+    ///   - eventType: the event type for which to notify subscribers for
+    ///   - options: temporarily overwritten options for this call
+    ///   - closure: the closure to perform on subscribers for the given event type
+    ///
+    /// - SeeAlso:
+    ///   [notify(_:closure:)](EventBus.notify(_:closure:))
+    @discardableResult
+    func notify<T>(_ eventType: T.Type, options: Options, closure: @escaping (T) -> ()) -> Bool
 }
 
 /// Options for configuring the behavior of a given EventBus.
@@ -466,8 +536,14 @@ extension EventBus: EventRegistrable {
 
 extension EventBus: EventSubscribable {
     public func add<T>(subscriber: T, for eventType: T.Type) {
+        return self.add(subscriber: subscriber, for: eventType, options: self.options)
+    }
+
+    public func add<T>(subscriber: T, for eventType: T.Type, options: Options) {
         self.warnIfNonClass(subscriber)
-        self.warnIfUnknown(eventType)
+        if options.contains(.warnUnknown) {
+            self.warnIfUnknown(eventType)
+        }
         self.serialQueue.sync {
             self.updateSubscribers(for: eventType) { subscribed in
                 subscribed.insert(WeakBox(subscriber as AnyObject))
@@ -476,8 +552,14 @@ extension EventBus: EventSubscribable {
     }
 
     public func remove<T>(subscriber: T, for eventType: T.Type) {
+        return self.remove(subscriber: subscriber, for: eventType, options: self.options)
+    }
+
+    public func remove<T>(subscriber: T, for eventType: T.Type, options: Options) {
         self.warnIfNonClass(subscriber)
-        self.warnIfUnknown(eventType)
+        if options.contains(.warnUnknown) {
+            self.warnIfUnknown(eventType)
+        }
         self.serialQueue.sync {
             self.updateSubscribers(for: eventType) { subscribed in
                 subscribed.remove(WeakBox(subscriber as AnyObject))
@@ -486,6 +568,10 @@ extension EventBus: EventSubscribable {
     }
 
     public func remove<T>(subscriber: T) {
+        return self.remove(subscriber: subscriber, options: self.options)
+    }
+
+    public func remove<T>(subscriber: T, options: Options) {
         self.warnIfNonClass(subscriber)
         self.serialQueue.sync {
             for (identifier, subscribed) in self.subscribed {
@@ -503,8 +589,14 @@ extension EventBus: EventSubscribable {
     }
 
     internal func has<T>(subscriber: T, for eventType: T.Type) -> Bool {
+        return self.has(subscriber: subscriber, for: eventType, options: self.options)
+    }
+
+    internal func has<T>(subscriber: T, for eventType: T.Type, options: Options) -> Bool {
         self.warnIfNonClass(subscriber)
-        self.warnIfUnknown(eventType)
+        if options.contains(.warnUnknown) {
+            self.warnIfUnknown(eventType)
+        }
         return self.serialQueue.sync {
             guard let subscribed = self.subscribed[ObjectIdentifier(eventType)] else {
                 return false
@@ -517,7 +609,14 @@ extension EventBus: EventSubscribable {
 extension EventBus: EventNotifiable {
     @discardableResult
     public func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ()) -> Bool {
-        self.warnIfUnknown(eventType)
+        return self.notify(eventType, options: self.options, closure: closure)
+    }
+
+    @discardableResult
+    public func notify<T>(_ eventType: T.Type, options: Options, closure: @escaping (T) -> ()) -> Bool {
+        if options.contains(.warnUnknown) {
+            self.warnIfUnknown(eventType)
+        }
         self.logEvent(eventType)
         return self.serialQueue.sync {
             var handled: Int = 0
@@ -537,7 +636,7 @@ extension EventBus: EventNotifiable {
                     handled += chain.notify(eventType, closure: closure) ? 1 : 0
                 }
             }
-            if handled == 0 {
+            if (handled == 0) && options.contains(.warnUnhandled) {
                 self.warnUnhandled(eventType)
             }
             return handled > 0
@@ -547,6 +646,13 @@ extension EventBus: EventNotifiable {
 
 extension EventBus: EventChainable {
     public func attach<T>(chain: EventNotifiable, for eventType: T.Type) {
+        return self.attach(chain: chain, for: eventType, options: self.options)
+    }
+
+    public func attach<T>(chain: EventNotifiable, for eventType: T.Type, options: Options) {
+        if options.contains(.warnUnknown) {
+            self.warnIfUnknown(eventType)
+        }
         self.serialQueue.sync {
             self.updateChains(for: eventType) { chained in
                 chained.insert(WeakBox(chain as AnyObject))
@@ -555,6 +661,13 @@ extension EventBus: EventChainable {
     }
 
     public func detach<T>(chain: EventNotifiable, for eventType: T.Type) {
+        return self.detach(chain: chain, for: eventType, options: self.options)
+    }
+
+    public func detach<T>(chain: EventNotifiable, for eventType: T.Type, options: Options) {
+        if options.contains(.warnUnknown) {
+            self.warnIfUnknown(eventType)
+        }
         self.serialQueue.sync {
             self.updateChains(for: eventType) { chained in
                 chained.remove(WeakBox(chain as AnyObject))
@@ -579,7 +692,13 @@ extension EventBus: EventChainable {
     }
 
     internal func has<T>(chain: EventNotifiable, for eventType: T.Type) -> Bool {
-        self.warnIfUnknown(eventType)
+        return self.has(chain: chain, for: eventType, options: self.options)
+    }
+
+    internal func has<T>(chain: EventNotifiable, for eventType: T.Type, options: Options) -> Bool {
+        if options.contains(.warnUnknown) {
+            self.warnIfUnknown(eventType)
+        }
         return self.serialQueue.sync {
             guard let chained = self.chained[ObjectIdentifier(eventType)] else {
                 return false
