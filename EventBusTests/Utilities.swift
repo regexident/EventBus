@@ -45,7 +45,7 @@ class FooBarMock: Mock, FooMockable, BarMockable {
     func bar() { self.closure(.bar) }
 }
 
-enum MockError { case unknownEvent, droppedEvent, invalidSubscriber }
+enum MockError { case unknownEvent, unhandledEvent, invalidSubscriber }
 
 class ErrorHandlerMock: ErrorHandler {
     fileprivate let closure: (MockError) -> ()
@@ -59,7 +59,7 @@ class ErrorHandlerMock: ErrorHandler {
     }
 
     func eventBus<T>(_ eventBus: EventBus, droppedUnhandledEvent eventType: T.Type) {
-        self.closure(.droppedEvent)
+        self.closure(.unhandledEvent)
     }
 
     func eventBus<T>(_ eventBus: EventBus, receivedNonClassSubscriber subscriberType: T.Type) {

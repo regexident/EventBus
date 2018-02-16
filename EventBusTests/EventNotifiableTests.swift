@@ -83,8 +83,8 @@ class EventNotifiableTests: XCTestCase {
 
         let errorHandlerMock = ErrorHandlerMock { error in
             switch error {
-            case .droppedEvent: expectation.fulfill()
-            case _: XCTFail("Should not have emitted `.droppedEvent` on handler")
+            case .unhandledEvent: expectation.fulfill()
+            case _: XCTFail("Should not have emitted `.unhandledEvent` on handler")
             }
         }
 
