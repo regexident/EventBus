@@ -8,9 +8,13 @@
 
 import Foundation
 
+public protocol EventBusProtocol: class {
+    var options: Options { get }
+}
+
 /// A reduced type-erased interface for EventBus
 /// for selectively exposing its type-registration capabilities.
-public protocol EventRegistrable: class {
+public protocol EventRegistrable: EventBusProtocol {
 
     /// Registers a given event bus for a given event type.
     ///
@@ -34,7 +38,7 @@ public protocol EventRegistrable: class {
 
 /// A reduced type-erased interface for EventBus
 /// for selectively exposing its event-subscription capabilities.
-public protocol EventSubscribable: class {
+public protocol EventSubscribable: EventBusProtocol {
     /// Adds a given object to the list of subscribers of a given event type on the event bus.
     ///
     /// - Parameters:
@@ -140,7 +144,7 @@ public protocol EventSubscribable: class {
 
 /// A reduced type-erased interface for EventBus
 /// for selectively exposing its event-chaining capabilities.
-public protocol EventChainable: class {
+public protocol EventChainable: EventBusProtocol {
     /// Attaches a second event bus chained to the event bus.
     ///
     /// - Note:
@@ -231,7 +235,7 @@ public protocol EventChainable: class {
 
 /// A reduced type-erased interface for EventBus
 /// for selectively exposing its event-notification capabilities.
-public protocol EventNotifiable: class {
+public protocol EventNotifiable: EventBusProtocol {
 
     /// Notifies all subscribers (and chained event busses)
     ///
@@ -380,7 +384,7 @@ internal struct DefaultLogHandler: LogHandler {
 }
 
 /// A type-safe event bus.
-public class EventBus {
+public class EventBus: EventBusProtocol {
 
     internal struct WeakBox: Hashable {
         internal weak var inner: AnyObject?
