@@ -419,6 +419,9 @@ public class EventBus: EventBusProtocol {
     /// The event bus' configuration options.
     public let options: Options
 
+    /// The event bus' label used for debugging.
+    public let label: String?
+
     internal var errorHandler: ErrorHandler = DefaultErrorHandler()
     internal var logHandler: LogHandler = DefaultLogHandler()
 
@@ -436,9 +439,10 @@ public class EventBus: EventBusProtocol {
     /// - Parameters:
     ///   - options: the event bus' options
     ///   - queue: the dispatch queue to notify subscribers on
-    public init(options: Options? = nil, queue: DispatchQueue = .global()) {
-        self.queue = queue
+    public init(options: Options? = nil, label: String? = nil, queue: DispatchQueue = .global()) {
         self.options = options ?? Options()
+        self.label = label
+        self.queue = queue
     }
 
     /// The event types the event bus is registered for.
@@ -718,7 +722,8 @@ extension EventBus: CustomStringConvertible {
         return Swift.withUnsafePointer(to: &mutableSelf) { pointer in
             let name = String(describing: type(of: mutableSelf))
             let address = String(format: "%p", pointer)
-            return "<\(name): \(address)>"
+            let label = self.label.map { " \"\($0)\"" } ?? ""
+            return "<\(name): \(address)\(label)>"
         }
     }
 }
