@@ -1,5 +1,5 @@
 //
-//  EventSubscribableTests.swift
+//  MultiEventSubscribableTests.swift
 //  EventBusTests
 //
 //  Created by Vincent Esche on 04/12/2016.
@@ -11,12 +11,12 @@ import XCTest
 import Foundation
 @testable import EventBus
 
-class EventSubscribableTests: XCTestCase {
+class MultiEventSubscribableTests: XCTestCase {
 
     func testAddingSubscriberWithoutRelatedSibling() {
         let fooStub = FooStub()
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         XCTAssertFalse(eventBus.has(subscriber: fooStub, for: FooStubable.self))
 
         eventBus.add(subscriber: fooStub, for: FooStubable.self)
@@ -27,7 +27,7 @@ class EventSubscribableTests: XCTestCase {
         let fooStubA = FooStub()
         let fooStubB = FooStub()
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         eventBus.add(subscriber: fooStubA, for: FooStubable.self)
         XCTAssertFalse(eventBus.has(subscriber: fooStubB, for: FooStubable.self))
 
@@ -39,7 +39,7 @@ class EventSubscribableTests: XCTestCase {
         let fooStub = FooStub()
         let barStub = BarStub()
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         eventBus.add(subscriber: fooStub, for: FooStubable.self)
         XCTAssertTrue(eventBus.has(subscriber: fooStub, for: FooStubable.self))
         XCTAssertFalse(eventBus.has(subscriber: barStub, for: BarStubable.self))
@@ -52,7 +52,7 @@ class EventSubscribableTests: XCTestCase {
     func testAddingSubscriberWithMultipleConformances() {
         let fooBarStub = FooBarStub()
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         eventBus.add(subscriber: fooBarStub, for: FooStubable.self)
         XCTAssertTrue(eventBus.has(subscriber: fooBarStub, for: FooStubable.self))
         XCTAssertFalse(eventBus.has(subscriber: fooBarStub, for: BarStubable.self))
@@ -65,7 +65,7 @@ class EventSubscribableTests: XCTestCase {
     func testRemovingSubscriberWithoutRelatedSibling() {
         let fooStub = FooStub()
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         eventBus.add(subscriber: fooStub, for: FooStubable.self)
         XCTAssertTrue(eventBus.has(subscriber: fooStub, for: FooStubable.self))
 
@@ -77,7 +77,7 @@ class EventSubscribableTests: XCTestCase {
         let fooStubA = FooStub()
         let fooStubB = FooStub()
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         eventBus.add(subscriber: fooStubA, for: FooStubable.self)
         eventBus.add(subscriber: fooStubB, for: FooStubable.self)
         XCTAssertTrue(eventBus.has(subscriber: fooStubA, for: FooStubable.self))
@@ -92,7 +92,7 @@ class EventSubscribableTests: XCTestCase {
         let fooStub = FooStub()
         let barStub = BarStub()
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         eventBus.add(subscriber: fooStub, for: FooStubable.self)
         XCTAssertTrue(eventBus.has(subscriber: fooStub, for: FooStubable.self))
         XCTAssertFalse(eventBus.has(subscriber: barStub, for: BarStubable.self))
@@ -105,7 +105,7 @@ class EventSubscribableTests: XCTestCase {
     func testRemovingSubscriberWithMultipleConformancesIndividually() {
         let fooBarStub = FooBarStub()
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         eventBus.add(subscriber: fooBarStub, for: FooStubable.self)
         eventBus.add(subscriber: fooBarStub, for: BarStubable.self)
         XCTAssertTrue(eventBus.has(subscriber: fooBarStub, for: FooStubable.self))
@@ -119,7 +119,7 @@ class EventSubscribableTests: XCTestCase {
     func testRemovingSubscriberWithMultipleConformancesBroadly() {
         let fooBarStub = FooBarStub()
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         eventBus.add(subscriber: fooBarStub, for: FooStubable.self)
         eventBus.add(subscriber: fooBarStub, for: BarStubable.self)
 
@@ -141,7 +141,7 @@ class EventSubscribableTests: XCTestCase {
             }
         }
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         eventBus.errorHandler = errorHandlerMock
         eventBus.add(subscriber: InvalidFooStub(), for: FooStubable.self)
 
@@ -158,7 +158,7 @@ class EventSubscribableTests: XCTestCase {
             }
         }
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         eventBus.errorHandler = errorHandlerMock
         eventBus.remove(subscriber: InvalidFooStub(), for: FooStubable.self)
 
@@ -175,7 +175,7 @@ class EventSubscribableTests: XCTestCase {
             }
         }
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         eventBus.errorHandler = errorHandlerMock
         eventBus.remove(subscriber: InvalidFooStub())
 
@@ -194,7 +194,7 @@ class EventSubscribableTests: XCTestCase {
             }
         }
 
-        let eventBus = EventBus(options: .warnUnknown)
+        let eventBus = EventMultiBus(options: .warnUnknown)
         eventBus.register(forEvent: BarMockable.self)
         eventBus.errorHandler = errorHandlerMock
         eventBus.add(subscriber: fooStub, for: FooStubable.self)

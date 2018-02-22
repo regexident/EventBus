@@ -47,34 +47,34 @@ class FooBarMock: Mock, FooMockable, BarMockable {
 
 enum MockError { case unknownEvent, unhandledEvent, invalidSubscriber }
 
-class ErrorHandlerMock: ErrorHandler {
+class ErrorHandlerMock: ErrorMultiHandler {
     fileprivate let closure: (MockError) -> ()
 
     init(closure: ((MockError) -> ())? = nil) {
         self.closure = closure ?? { _ in }
     }
 
-    func eventBus<T>(_ eventBus: EventBus, receivedUnknownEvent eventType: T.Type) {
+    func eventBus<T>(_ eventBus: EventMultiBus, receivedUnknownEvent eventType: T.Type) {
         self.closure(.unknownEvent)
     }
 
-    func eventBus<T>(_ eventBus: EventBus, droppedUnhandledEvent eventType: T.Type) {
+    func eventBus<T>(_ eventBus: EventMultiBus, droppedUnhandledEvent eventType: T.Type) {
         self.closure(.unhandledEvent)
     }
 
-    func eventBus<T>(_ eventBus: EventBus, receivedNonClassSubscriber subscriberType: T.Type) {
+    func eventBus<T>(_ eventBus: EventMultiBus, receivedNonClassSubscriber subscriberType: T.Type) {
         self.closure(.invalidSubscriber)
     }
 }
 
-class LogHandlerMock: LogHandler {
+class LogHandlerMock: LogMultiHandler {
     fileprivate let closure: () -> ()
 
     init(closure: (() -> ())? = nil) {
         self.closure = closure ?? { }
     }
 
-    func eventBus<T>(_ eventBus: EventBus, receivedEvent eventType: T.Type) {
+    func eventBus<T>(_ eventBus: EventMultiBus, receivedEvent eventType: T.Type) {
         self.closure()
     }
 }

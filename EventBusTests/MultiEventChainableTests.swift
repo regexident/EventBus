@@ -1,5 +1,5 @@
 //
-//  EventChainableTests.swift
+//  MultiEventChainableTests.swift
 //  EventBusTests
 //
 //  Created by Vincent Esche on 04/12/2016.
@@ -11,10 +11,10 @@ import XCTest
 import Foundation
 @testable import EventBus
 
-class EventChainableTests: XCTestCase {
+class MultiEventChainableTests: XCTestCase {
     func testAttachChain() {
-        let rootEventBus = EventBus()
-        let leafEventBus = EventBus()
+        let rootEventBus = EventMultiBus()
+        let leafEventBus = EventMultiBus()
 
         XCTAssertFalse(rootEventBus.has(chain: leafEventBus, for: FooStubable.self))
         rootEventBus.attach(chain: leafEventBus, for: FooStubable.self)
@@ -22,8 +22,8 @@ class EventChainableTests: XCTestCase {
     }
 
     func testDetachChain() {
-        let rootEventBus = EventBus()
-        let leafEventBus = EventBus()
+        let rootEventBus = EventMultiBus()
+        let leafEventBus = EventMultiBus()
         rootEventBus.attach(chain: leafEventBus, for: FooStubable.self)
 
         XCTAssertTrue(rootEventBus.has(chain: leafEventBus, for: FooStubable.self))
@@ -32,9 +32,9 @@ class EventChainableTests: XCTestCase {
     }
 
     func testDetachAllChains() {
-        let rootEventBus = EventBus()
-        let leafEventBusA = EventBus()
-        let leafEventBusB = EventBus()
+        let rootEventBus = EventMultiBus()
+        let leafEventBusA = EventMultiBus()
+        let leafEventBusB = EventMultiBus()
         rootEventBus.attach(chain: leafEventBusA, for: FooStubable.self)
         rootEventBus.attach(chain: leafEventBusB, for: FooStubable.self)
 
@@ -53,9 +53,9 @@ class EventChainableTests: XCTestCase {
         let notifiedFooMock = FooMock { _ in notifiedExpectation.fulfill() }
         let ignoredBarMock = BarMock { _ in ignoredExpectation.fulfill() }
 
-        let rootEventBus = EventBus()
-        let notifiedLeafEventBus = EventBus()
-        let ignoredLeafEventBus = EventBus()
+        let rootEventBus = EventMultiBus()
+        let notifiedLeafEventBus = EventMultiBus()
+        let ignoredLeafEventBus = EventMultiBus()
 
         rootEventBus.attach(chain: notifiedLeafEventBus, for: FooMockable.self)
         rootEventBus.attach(chain: ignoredLeafEventBus, for: BarMockable.self)

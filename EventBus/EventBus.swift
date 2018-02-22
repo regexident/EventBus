@@ -13,32 +13,10 @@ public protocol EventBusProtocol: class {
 }
 
 /// A reduced type-erased interface for EventBus
-/// for selectively exposing its type-registration capabilities.
-public protocol EventRegistrable: EventBusProtocol {
-
-    /// Registers a given event bus for a given event type.
-    ///
-    /// - Parameters:
-    ///   - eventType: the event type to register
-    ///
-    /// - Note:
-    ///   This only has an effect if the event bus
-    ///   has been initialized with the `Options.warnUnknown` flag.
-    ///
-    /// ```
-    /// protocol MyEvent {
-    ///     // ...
-    /// }
-    ///
-    /// let eventBus = EventBus()
-    /// eventBus.register(forEvent: MyEvent.self)
-    /// ```
-    func register<T>(forEvent eventType: T.Type)
-}
-
-/// A reduced type-erased interface for EventBus
 /// for selectively exposing its event-subscription capabilities.
 public protocol EventSubscribable: EventBusProtocol {
+    associatedtype Event
+
     /// Adds a given object to the list of subscribers of a given event type on the event bus.
     ///
     /// - Parameters:
@@ -54,7 +32,7 @@ public protocol EventSubscribable: EventBusProtocol {
     /// // ...
     /// eventBus.add(subscriber: subscriber, for: MyEvent.self)
     /// ```
-    func add<T>(subscriber: T, for eventType: T.Type)
+    func add(subscriber: Event)
 
     /// Adds a given object to the list of subscribers of a given event type on the event bus.
     ///
@@ -65,37 +43,7 @@ public protocol EventSubscribable: EventBusProtocol {
     ///
     /// - SeeAlso:
     ///   [add(subscriber:for)](EventBus.add(subscriber:for:))
-    func add<T>(subscriber: T, for eventType: T.Type, options: Options)
-
-    /// Removes a given object from the list of subscribers of a given event type on the event bus.
-    ///
-    /// - Parameters:
-    ///   - subscriber: the subscriber to remove from the event bus for the given event type
-    ///   - eventType: the event type to unsubscribe from
-    ///
-    /// ```
-    /// protocol MyEvent {
-    ///     // ...
-    /// }
-    ///
-    /// let eventBus = EventBus()
-    /// // ...
-    /// eventBus.add(subscriber: subscriber, for: MyEvent.self)
-    /// // ...
-    /// eventBus.remove(subscriber: subscriber, for: MyEvent.self)
-    /// ```
-    func remove<T>(subscriber: T, for eventType: T.Type)
-
-    /// Removes a given object from the list of subscribers of a given event type on the event bus.
-    ///
-    /// - Parameters:
-    ///   - subscriber: the subscriber to remove from the event bus for the given event type
-    ///   - eventType: the event type to unsubscribe from
-    ///   - options: temporarily overwritten options for this call
-    ///
-    /// - SeeAlso:
-    ///   [remove(subscriber:for:)](EventBus.remove(subscriber:for:))
-    func remove<T>(subscriber: T, for eventType: T.Type, options: Options)
+    func add(subscriber: Event, options: Options)
 
     /// Removes a given object from the list of subscribers on the event bus.
     ///
@@ -113,7 +61,7 @@ public protocol EventSubscribable: EventBusProtocol {
     /// // ...
     /// eventBus.remove(subscriber: subscriber)
     /// ```
-    func remove<T>(subscriber: T)
+    func remove(subscriber: Event)
 
     /// Removes a given object from the list of subscribers on the event bus.
     ///
@@ -124,7 +72,7 @@ public protocol EventSubscribable: EventBusProtocol {
     /// - SeeAlso:
     ///   [remove(subscriber:)](EventBus.remove(subscriber:))
     /// ```
-    func remove<T>(subscriber: T, options: Options)
+    func remove(subscriber: Event, options: Options)
 
     /// Removes all objects from the list of subscribers on the event bus.
     ///
@@ -145,6 +93,8 @@ public protocol EventSubscribable: EventBusProtocol {
 /// A reduced type-erased interface for EventBus
 /// for selectively exposing its event-chaining capabilities.
 public protocol EventChainable: EventBusProtocol {
+    associatedtype Event
+
     /// Attaches a second event bus chained to the event bus.
     ///
     /// - Note:
@@ -160,7 +110,7 @@ public protocol EventChainable: EventBusProtocol {
     /// // ...
     /// eventBus.attach(chain: chainedEventBus, for: MyEvent.self)
     /// ```
-    func attach<T>(chain: EventNotifiable, for eventType: T.Type)
+    func attach<T: EventNotifiable>(chain: T)
 
     /// Attaches a second event bus chained to the event bus.
     ///
@@ -174,7 +124,7 @@ public protocol EventChainable: EventBusProtocol {
     ///
     /// - SeeAlso:
     ///   [attach(chain:for:)](EventBus.attach(chain:for:))
-    func attach<T>(chain: EventNotifiable, for eventType: T.Type, options: Options)
+    func attach<T: EventNotifiable>(chain: T, options: Options)
 
     /// Detaches a chained event bus from the event bus for a given event type.
     ///
@@ -190,7 +140,7 @@ public protocol EventChainable: EventBusProtocol {
     /// // ...
     /// eventBus.detach(chain: chainedEventBus, for: MyEvent.self)
     /// ```
-    func detach<T>(chain: EventNotifiable, for eventType: T.Type)
+    func detach<T: EventNotifiable>(chain: T)
 
     /// Detaches a chained event bus from the event bus for a given event type.
     ///
@@ -201,22 +151,7 @@ public protocol EventChainable: EventBusProtocol {
     ///
     /// - SeeAlso:
     ///   [detach(chain:for:)](EventBus.detach(chain:for:))
-    func detach<T>(chain: EventNotifiable, for eventType: T.Type, options: Options)
-
-    /// Detaches a second event bus from the event bus.
-    ///
-    /// - Parameters
-    ///   - chain: the event bus to detach
-    ///
-    /// ```
-    /// let eventBus = EventBus()
-    /// let chainedEventBus = EventBus()
-    /// // ...
-    /// eventBus.attach(chain: chainedEventBus, for: MyEvent.self)
-    /// // ...
-    /// eventBus.detach(chain: chainedEventBus)
-    /// ```
-    func detach(chain: EventNotifiable)
+    func detach<T: EventNotifiable>(chain: T, options: Options)
 
     /// Detaches all attached event busses from the event bus.
     ///
@@ -236,6 +171,7 @@ public protocol EventChainable: EventBusProtocol {
 /// A reduced type-erased interface for EventBus
 /// for selectively exposing its event-notification capabilities.
 public protocol EventNotifiable: EventBusProtocol {
+    associatedtype Event
 
     /// Notifies all subscribers (and chained event busses)
     ///
@@ -257,7 +193,7 @@ public protocol EventNotifiable: EventBusProtocol {
     /// }
     /// ```
     @discardableResult
-    func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ()) -> Bool
+    func notify(closure: @escaping (Event) -> ()) -> Bool
 
     /// Notifies all subscribers (and chained event busses)
     ///
@@ -269,7 +205,56 @@ public protocol EventNotifiable: EventBusProtocol {
     /// - SeeAlso:
     ///   [notify(_:closure:)](EventBus.notify(_:closure:))
     @discardableResult
-    func notify<T>(_ eventType: T.Type, options: Options, closure: @escaping (T) -> ()) -> Bool
+    func notify(options: Options, closure: @escaping (Event) -> ()) -> Bool
+}
+
+internal protocol ErrorHandler {
+    func eventBusDroppedUnhandledEvent<T>(_ eventBus: EventBus<T>)
+    func eventBus<T>(_ eventBus: EventBus<T>, receivedNonClassSubscriber subscriberType: EventBus<T>.Event)
+}
+
+internal struct DefaultErrorHandler: ErrorHandler {
+    @inline(__always)
+    internal func eventBusDroppedUnhandledEvent<T>(_ eventBus: EventBus<T>) {
+        #if DEBUG
+            typealias ErrorType = UnhandledEventError
+            let errorName = String(describing: ErrorType.self)
+            print("\(eventBus): Event of type '\(T.self)' was not handled.")
+            print("Info: Use a \"Swift Error Breakpoint\" on type \"EventBus.\(errorName)\" to catch.")
+            do {
+                throw ErrorType()
+            } catch {
+                // intentionally left blank
+            }
+        #endif
+    }
+
+    @inline(__always)
+    internal func eventBus<T>(_ eventBus: EventBus<T>, receivedNonClassSubscriber subscriberType: EventBus<T>.Event) {
+        #if DEBUG
+            typealias ErrorType = InvalidSubscriberError
+            let errorName = String(describing: ErrorType.self)
+            print("\(eventBus): Expected class, found struct/enum: \(subscriberType).")
+            print("Info: Use a \"Swift Error Breakpoint\" on type \"EventBus.\(errorName)\" to catch.")
+            do {
+                throw ErrorType()
+            } catch {
+                // intentionally left blank
+            }
+        #endif
+    }
+}
+
+internal protocol LogHandler {
+    func eventBusReceivedEvent<T>(_ eventBus: EventBus<T>)
+}
+
+internal struct DefaultLogHandler: LogHandler {
+    func eventBusReceivedEvent<T>(_ eventBus: EventBus<T>) {
+        #if DEBUG
+            print("\(eventBus): Received event '\(EventBus<T>.Event.self)'.")
+        #endif
+    }
 }
 
 /// Options for configuring the behavior of a given EventBus.
@@ -289,132 +274,20 @@ public struct Options: OptionSet {
     /// - Note:
     ///   Warning logs are only emitted if the `DEBUG` compiler flag is present.
     ///
-    ///   By setting `EventBus.isStrict = true` you can catch the error using
+    ///   On debug builds you can catch the error using
     ///   a "Swift Error Breakpoint" on type `StrictnessError`.
     /// ```
-    public static let warnUnknown = Options(rawValue: 1 << 0)
-
-    /// Print a warning whenever an event gets subscribed to or notified that has not previously
-    /// been registered (i.e. via `eventBus.register(forEvent: MyEvent.self)`) with the event bus.
-    ///
-    /// - Note:
-    ///   Warning logs are only emitted if the `DEBUG` compiler flag is present.
-    ///
-    ///   By setting `EventBus.isStrict = true` you can catch the error using
-    ///   a "Swift Error Breakpoint" on type `StrictnessError`.
-    /// ```
-    public static let warnUnhandled = Options(rawValue: 1 << 1)
+    public static let warnUnhandled: Options = .init(rawValue: 1 << 0)
 
     /// Print a log of emitted events for a given event bus.
-    public static let logEvents = Options(rawValue: 1 << 2)
-}
-
-internal protocol ErrorHandler {
-    func eventBus<T>(_ eventBus: EventBus, receivedUnknownEvent eventType: T.Type)
-    func eventBus<T>(_ eventBus: EventBus, droppedUnhandledEvent eventType: T.Type)
-    func eventBus<T>(_ eventBus: EventBus, receivedNonClassSubscriber subscriberType: T.Type)
-}
-
-internal struct DefaultErrorHandler: ErrorHandler {
-    @inline(__always)
-    internal func eventBus<T>(_ eventBus: EventBus, receivedUnknownEvent eventType: T.Type) {
-        #if DEBUG
-            typealias ErrorType = UnknownEventError
-            let errorName = String(describing: ErrorType.self)
-            let eventTypes = eventBus.registeredEventTypes
-            let eventNames = eventTypes.lazy.map { "\($0)" }.joined(separator: ", ")
-            let namesString = eventNames.isEmpty ? "" : " (e.g. \(eventNames))"
-            print("\(eventBus): Expected event of registered type\(namesString), found: \(eventType).")
-            print("Info: Use a \"Swift Error Breakpoint\" on type \"EventBus.\(errorName)\" to catch.")
-            if EventBus.isStrict {
-                do {
-                    throw ErrorType()
-                } catch {
-                    // intentionally left blank
-                }
-            }
-        #endif
-    }
-
-    @inline(__always)
-    internal func eventBus<T>(_ eventBus: EventBus, droppedUnhandledEvent eventType: T.Type) {
-        #if DEBUG
-            typealias ErrorType = UnhandledEventError
-            let errorName = String(describing: ErrorType.self)
-            print("\(eventBus): Event of type '\(eventType)' was not handled.")
-            print("Info: Use a \"Swift Error Breakpoint\" on type \"EventBus.\(errorName)\" to catch.")
-            if EventBus.isStrict {
-                do {
-                    throw ErrorType()
-                } catch {
-                    // intentionally left blank
-                }
-            }
-        #endif
-    }
-
-    @inline(__always)
-    internal func eventBus<T>(_ eventBus: EventBus, receivedNonClassSubscriber subscriberType: T.Type) {
-        #if DEBUG
-            typealias ErrorType = InvalidSubscriberError
-            let errorName = String(describing: ErrorType.self)
-            print("\(eventBus): Expected class, found struct/enum: \(subscriberType).")
-            print("Info: Use a \"Swift Error Breakpoint\" on type \"EventBus.\(errorName)\" to catch.")
-            if EventBus.isStrict {
-                do {
-                    throw ErrorType()
-                } catch {
-                    // intentionally left blank
-                }
-            }
-        #endif
-    }
-}
-
-internal protocol LogHandler {
-    func eventBus<T>(_ eventBus: EventBus, receivedEvent: T.Type)
-}
-
-internal struct DefaultLogHandler: LogHandler {
-    func eventBus<T>(_ eventBus: EventBus, receivedEvent eventType: T.Type) {
-        #if DEBUG
-            print("\(eventBus): Received event '\(eventType)'.")
-        #endif
-    }
+    public static let logEvents: Options = .init(rawValue: 1 << 1)
 }
 
 /// A type-safe event bus.
-public class EventBus: EventBusProtocol {
-
-    internal struct WeakBox: Hashable {
-        internal weak var inner: AnyObject?
-
-        internal init(_ inner: AnyObject) {
-            self.inner = inner
-        }
-
-        internal static func == (lhs: WeakBox, rhs: WeakBox) -> Bool {
-            return lhs.inner === rhs.inner
-        }
-
-        internal static func == (lhs: WeakBox, rhs: AnyObject) -> Bool {
-            return lhs.inner === rhs
-        }
-
-        internal var hashValue: Int {
-            guard let inner = self.inner else {
-                return 0
-            }
-            return ObjectIdentifier(inner).hashValue
-        }
-    }
+public class EventBus<T>: EventBusProtocol {
+    public typealias Event = T
 
     typealias WeakSet = Set<WeakBox>
-
-    public static var isStrict: Bool = false
-
-    /// A global shared event bus configured using default options.
-    public static let shared: EventBus = EventBus()
 
     /// The event bus' configuration options.
     public let options: Options
@@ -422,11 +295,8 @@ public class EventBus: EventBusProtocol {
     internal var errorHandler: ErrorHandler = DefaultErrorHandler()
     internal var logHandler: LogHandler = DefaultLogHandler()
 
-    fileprivate var knownTypes: [ObjectIdentifier: Any] = [:]
-
-    fileprivate var registered: Set<ObjectIdentifier> = []
-    fileprivate var subscribed: [ObjectIdentifier: WeakSet] = [:]
-    fileprivate var chained: [ObjectIdentifier: WeakSet] = [:]
+    fileprivate var subscribed: WeakSet = []
+    fileprivate var chained: WeakSet = []
 
     fileprivate let serialQueue: DispatchQueue = DispatchQueue(label: "com.regexident.eventbus")
     fileprivate let queue: DispatchQueue
@@ -441,207 +311,97 @@ public class EventBus: EventBusProtocol {
         self.options = options ?? Options()
     }
 
-    /// The event types the event bus is registered for.
-    public var registeredEventTypes: [Any] {
-        return self.registered.flatMap { self.knownTypes[$0] }
-    }
-
-    /// The event types the event bus has subscribers for.
-    public var subscribedEventTypes: [Any] {
-        return self.subscribed.keys.flatMap { self.knownTypes[$0] }
-    }
-
-    /// The event types the event bus has chains for.
-    public var chainedEventTypes: [Any] {
-        return self.chained.keys.flatMap { self.knownTypes[$0] }
-    }
-
     @inline(__always)
     fileprivate func warnIfNonClass<T>(_ subscriber: T) {
         // Related bug: https://bugs.swift.org/browse/SR-4420:
         guard !(type(of: subscriber as Any) is AnyClass) else {
             return
         }
-        self.errorHandler.eventBus(self, receivedNonClassSubscriber: type(of: subscriber))
+//        self.errorHandler.eventBus(self, receivedNonClassSubscriber: type(of: subscriber))
     }
 
     @inline(__always)
-    fileprivate func warnIfUnknown<T>(_ eventType: T.Type) {
-        guard self.options.contains(.warnUnknown) else {
-            return
-        }
-        guard !self.registered.contains(ObjectIdentifier(eventType)) else {
-            return
-        }
-        self.errorHandler.eventBus(self, receivedUnknownEvent: eventType)
-    }
-
-    @inline(__always)
-    fileprivate func warnUnhandled<T>(_ eventType: T.Type) {
+    fileprivate func warnUnhandled() {
         guard self.options.contains(.warnUnhandled) else {
             return
         }
-        self.errorHandler.eventBus(self, droppedUnhandledEvent: eventType)
+        self.errorHandler.eventBusDroppedUnhandledEvent(self)
     }
 
     @inline(__always)
-    fileprivate func logEvent<T>(_ eventType: T.Type) {
+    fileprivate func logEvent(_ eventType: Event.Type) {
         guard self.options.contains(.logEvents) else {
             return
         }
-        self.logHandler.eventBus(self, receivedEvent: eventType)
-    }
-
-    @inline(__always)
-    fileprivate func updateSubscribers<T>(for eventType: T.Type, closure: (inout WeakSet) -> ()) {
-        let identifier = ObjectIdentifier(eventType)
-        let subscribed = self.subscribed[identifier] ?? []
-        self.subscribed[identifier] = self.update(set: subscribed, closure: closure)
-        self.knownTypes[identifier] = String(describing: eventType)
-    }
-
-    @inline(__always)
-    fileprivate func updateChains<T>(for eventType: T.Type, closure: (inout WeakSet) -> ()) {
-        let identifier = ObjectIdentifier(eventType)
-        let chained = self.chained[identifier] ?? []
-        self.chained[identifier] = self.update(set: chained, closure: closure)
-        self.knownTypes[identifier] = String(describing: eventType)
-    }
-
-    @inline(__always)
-    fileprivate func update(set: WeakSet, closure: (inout WeakSet) -> ()) -> WeakSet? {
-        var mutableSet = set
-        closure(&mutableSet)
-        // Remove weak nil elements while we're at it:
-        let filteredSet = mutableSet.filter { $0.inner != nil }
-        return filteredSet.isEmpty ? nil : filteredSet
-    }
-}
-
-internal struct InvalidSubscriberError: Error {
-    // intentionally left blank
-}
-
-internal struct UnknownEventError: Error {
-    // intentionally left blank
-}
-
-internal struct UnhandledEventError: Error {
-    // intentionally left blank
-}
-
-extension EventBus: EventRegistrable {
-    public func register<T>(forEvent eventType: T.Type) {
-        let identifier = ObjectIdentifier(eventType)
-        self.registered.insert(identifier)
-        self.knownTypes[identifier] = String(describing: eventType)
+        self.logHandler.eventBusReceivedEvent(self)
     }
 }
 
 extension EventBus: EventSubscribable {
-    public func add<T>(subscriber: T, for eventType: T.Type) {
-        return self.add(subscriber: subscriber, for: eventType, options: self.options)
+    public func add(subscriber: Event) {
+        return self.add(subscriber: subscriber, options: self.options)
     }
 
-    public func add<T>(subscriber: T, for eventType: T.Type, options: Options) {
+    public func add(subscriber: Event, options: Options) {
         self.warnIfNonClass(subscriber)
-        if options.contains(.warnUnknown) {
-            self.warnIfUnknown(eventType)
-        }
-        self.serialQueue.sync {
-            self.updateSubscribers(for: eventType) { subscribed in
-                subscribed.insert(WeakBox(subscriber as AnyObject))
-            }
+        let _ = self.serialQueue.sync {
+            self.subscribed.insert(WeakBox(subscriber as AnyObject))
         }
     }
 
-    public func remove<T>(subscriber: T, for eventType: T.Type) {
-        return self.remove(subscriber: subscriber, for: eventType, options: self.options)
-    }
-
-    public func remove<T>(subscriber: T, for eventType: T.Type, options: Options) {
-        self.warnIfNonClass(subscriber)
-        if options.contains(.warnUnknown) {
-            self.warnIfUnknown(eventType)
-        }
-        self.serialQueue.sync {
-            self.updateSubscribers(for: eventType) { subscribed in
-                subscribed.remove(WeakBox(subscriber as AnyObject))
-            }
-        }
-    }
-
-    public func remove<T>(subscriber: T) {
+    public func remove(subscriber: Event) {
         return self.remove(subscriber: subscriber, options: self.options)
     }
 
-    public func remove<T>(subscriber: T, options: Options) {
+    public func remove(subscriber: Event, options: Options) {
         self.warnIfNonClass(subscriber)
-        self.serialQueue.sync {
-            for (identifier, subscribed) in self.subscribed {
-                self.subscribed[identifier] = self.update(set: subscribed) { subscribed in
-                    subscribed.remove(WeakBox(subscriber as AnyObject))
-                }
-            }
+        let _ = self.serialQueue.sync {
+            self.subscribed.remove(WeakBox(subscriber as AnyObject))
         }
     }
 
     public func removeAllSubscribers() {
         self.serialQueue.sync {
-            self.subscribed = [:]
+            self.subscribed.removeAll()
         }
     }
 
-    internal func has<T>(subscriber: T, for eventType: T.Type) -> Bool {
-        return self.has(subscriber: subscriber, for: eventType, options: self.options)
+    internal func has<T>(subscriber: T) -> Bool {
+        return self.has(subscriber: subscriber, options: self.options)
     }
 
-    internal func has<T>(subscriber: T, for eventType: T.Type, options: Options) -> Bool {
+    internal func has<T>(subscriber: T, options: Options) -> Bool {
         self.warnIfNonClass(subscriber)
-        if options.contains(.warnUnknown) {
-            self.warnIfUnknown(eventType)
-        }
         return self.serialQueue.sync {
-            guard let subscribed = self.subscribed[ObjectIdentifier(eventType)] else {
-                return false
-            }
-            return subscribed.contains { $0.inner === (subscriber as AnyObject) }
+            return self.subscribed.contains { $0.inner === (subscriber as AnyObject) }
         }
     }
 }
 
 extension EventBus: EventNotifiable {
     @discardableResult
-    public func notify<T>(_ eventType: T.Type, closure: @escaping (T) -> ()) -> Bool {
-        return self.notify(eventType, options: self.options, closure: closure)
+    public func notify(closure: @escaping (Event) -> ()) -> Bool {
+        return self.notify(options: self.options, closure: closure)
     }
 
     @discardableResult
-    public func notify<T>(_ eventType: T.Type, options: Options, closure: @escaping (T) -> ()) -> Bool {
-        if options.contains(.warnUnknown) {
-            self.warnIfUnknown(eventType)
-        }
-        self.logEvent(eventType)
+    public func notify(options: Options, closure: @escaping (Event) -> ()) -> Bool {
+        self.logEvent(Event.self)
         return self.serialQueue.sync {
             var handled: Int = 0
-            let identifier = ObjectIdentifier(eventType)
             // Notify our direct subscribers:
-            if let subscribers = self.subscribed[identifier] {
-                for subscriber in subscribers.lazy.flatMap({ $0.inner as? T }) {
-                    self.queue.async {
-                        closure(subscriber)
-                    }
+            for subscriber in self.subscribed.lazy.flatMap({ $0.inner as? T }) {
+                self.queue.async {
+                    closure(subscriber)
                 }
-                handled += subscribers.count
+                handled += 1
             }
             // Notify our indirect subscribers:
-            if let chains = self.chained[identifier] {
-                for chain in chains.lazy.flatMap({ $0.inner as? EventNotifiable }) {
-                    handled += chain.notify(eventType, closure: closure) ? 1 : 0
-                }
+            for chain in self.chained.lazy.flatMap({ $0.inner as? EventNotifiable }) {
+                handled += chain.notify(closure: closure) ? 1 : 0
             }
             if (handled == 0) && options.contains(.warnUnhandled) {
-                self.warnUnhandled(eventType)
+                self.warnUnhandled()
             }
             return handled > 0
         }
@@ -649,65 +409,39 @@ extension EventBus: EventNotifiable {
 }
 
 extension EventBus: EventChainable {
-    public func attach<T>(chain: EventNotifiable, for eventType: T.Type) {
-        return self.attach(chain: chain, for: eventType, options: self.options)
+    public func attach<T: EventNotifiable>(chain: T) {
+        return self.attach(chain: chain, options: self.options)
     }
 
-    public func attach<T>(chain: EventNotifiable, for eventType: T.Type, options: Options) {
-        if options.contains(.warnUnknown) {
-            self.warnIfUnknown(eventType)
-        }
-        self.serialQueue.sync {
-            self.updateChains(for: eventType) { chained in
-                chained.insert(WeakBox(chain as AnyObject))
-            }
+    public func attach<T: EventNotifiable>(chain: T, options: Options) {
+        let _ = self.serialQueue.sync {
+            self.chained.insert(WeakBox(chain as AnyObject))
         }
     }
 
-    public func detach<T>(chain: EventNotifiable, for eventType: T.Type) {
-        return self.detach(chain: chain, for: eventType, options: self.options)
+    public func detach<T: EventNotifiable>(chain: T) {
+        return self.detach(chain: chain, options: self.options)
     }
 
-    public func detach<T>(chain: EventNotifiable, for eventType: T.Type, options: Options) {
-        if options.contains(.warnUnknown) {
-            self.warnIfUnknown(eventType)
-        }
-        self.serialQueue.sync {
-            self.updateChains(for: eventType) { chained in
-                chained.remove(WeakBox(chain as AnyObject))
-            }
-        }
-    }
-
-    public func detach(chain: EventNotifiable) {
-        self.serialQueue.sync {
-            for (identifier, chained) in self.chained {
-                self.chained[identifier] = self.update(set: chained) { chained in
-                    chained.remove(WeakBox(chain as AnyObject))
-                }
-            }
+    public func detach<T: EventNotifiable>(chain: T, options: Options) {
+        let _ = self.serialQueue.sync {
+            self.chained.remove(WeakBox(chain as AnyObject))
         }
     }
 
     public func detachAllChains() {
         self.serialQueue.sync {
-            self.chained = [:]
+            self.chained.removeAll()
         }
     }
 
-    internal func has<T>(chain: EventNotifiable, for eventType: T.Type) -> Bool {
-        return self.has(chain: chain, for: eventType, options: self.options)
+    internal func has<T: EventNotifiable>(chain: T) -> Bool {
+        return self.has(chain: chain, options: self.options)
     }
 
-    internal func has<T>(chain: EventNotifiable, for eventType: T.Type, options: Options) -> Bool {
-        if options.contains(.warnUnknown) {
-            self.warnIfUnknown(eventType)
-        }
+    internal func has<T: EventNotifiable>(chain: T, options: Options) -> Bool {
         return self.serialQueue.sync {
-            guard let chained = self.chained[ObjectIdentifier(eventType)] else {
-                return false
-            }
-            return chained.contains { $0.inner === (chain as AnyObject) }
+            self.chained.contains { $0.inner === (chain as AnyObject) }
         }
     }
 }

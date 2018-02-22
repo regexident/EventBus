@@ -1,5 +1,5 @@
 //
-//  EventNotifiableTests.swift
+//  MultiEventNotifiableTests.swift
 //  EventBusTests
 //
 //  Created by Vincent Esche on 04/12/2016.
@@ -11,13 +11,13 @@ import XCTest
 import Foundation
 @testable import EventBus
 
-class EventNotifiableTests: XCTestCase {
+class MultiEventNotifiableTests: XCTestCase {
     func testNotifyNotifiesRelatedSubscribers() {
         let expectation = self.expectation(description: "")
 
         let fooMock = FooMock { _ in expectation.fulfill() }
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         eventBus.add(subscriber: fooMock, for: FooMockable.self)
         eventBus.notify(FooMockable.self) { subscriber in
             subscriber.foo()
@@ -32,7 +32,7 @@ class EventNotifiableTests: XCTestCase {
 
         let fooMock = FooMock { _ in expectation.fulfill() }
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         eventBus.add(subscriber: fooMock, for: FooMockable.self)
         eventBus.notify(BarMockable.self) { subscriber in
             subscriber.bar()
@@ -51,7 +51,7 @@ class EventNotifiableTests: XCTestCase {
             }
         }
 
-        let eventBus = EventBus()
+        let eventBus = EventMultiBus()
         eventBus.add(subscriber: fooBarMock, for: FooMockable.self)
         eventBus.notify(FooMockable.self) { subscriber in
             subscriber.foo()
@@ -70,7 +70,7 @@ class EventNotifiableTests: XCTestCase {
             }
         }
 
-        let eventBus = EventBus(options: .warnUnknown)
+        let eventBus = EventMultiBus(options: .warnUnknown)
         eventBus.register(forEvent: BarMockable.self)
         eventBus.errorHandler = errorHandlerMock
         eventBus.notify(FooMockable.self) { _ in }
@@ -88,7 +88,7 @@ class EventNotifiableTests: XCTestCase {
             }
         }
 
-        let eventBus = EventBus(options: .warnUnhandled)
+        let eventBus = EventMultiBus(options: .warnUnhandled)
         eventBus.errorHandler = errorHandlerMock
         eventBus.notify(FooMockable.self) { _ in }
 
@@ -102,7 +102,7 @@ class EventNotifiableTests: XCTestCase {
             expectation.fulfill()
         }
 
-        let eventBus = EventBus(options: .logEvents)
+        let eventBus = EventMultiBus(options: .logEvents)
         eventBus.logHandler = logHandler
 
         eventBus.notify(FooMockable.self) { subscriber in
