@@ -447,17 +447,17 @@ public class EventBus: EventBusProtocol {
 
     /// The event types the event bus is registered for.
     public var registeredEventTypes: [Any] {
-        return self.registered.flatMap { self.knownTypes[$0] }
+        return self.registered.compactMap { self.knownTypes[$0] }
     }
 
     /// The event types the event bus has subscribers for.
     public var subscribedEventTypes: [Any] {
-        return self.subscribed.keys.flatMap { self.knownTypes[$0] }
+        return self.subscribed.keys.compactMap { self.knownTypes[$0] }
     }
 
     /// The event types the event bus has chains for.
     public var chainedEventTypes: [Any] {
-        return self.chained.keys.flatMap { self.knownTypes[$0] }
+        return self.chained.keys.compactMap { self.knownTypes[$0] }
     }
 
     @inline(__always)
@@ -631,7 +631,7 @@ extension EventBus: EventNotifiable {
             let identifier = ObjectIdentifier(eventType)
             // Notify our direct subscribers:
             if let subscribers = self.subscribed[identifier] {
-                for subscriber in subscribers.lazy.flatMap({ $0.inner as? T }) {
+                for subscriber in subscribers.lazy.compactMap({ $0.inner as? T }) {
                     self.queue.async {
                         closure(subscriber)
                     }
@@ -640,7 +640,7 @@ extension EventBus: EventNotifiable {
             }
             // Notify our indirect subscribers:
             if let chains = self.chained[identifier] {
-                for chain in chains.lazy.flatMap({ $0.inner as? EventNotifiable }) {
+                for chain in chains.lazy.compactMap({ $0.inner as? EventNotifiable }) {
                     handled += chain.notify(eventType, closure: closure) ? 1 : 0
                 }
             }
