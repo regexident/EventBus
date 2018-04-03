@@ -720,7 +720,7 @@ extension EventBus: CustomStringConvertible {
     public var description: String {
         var mutableSelf = self
         return Swift.withUnsafePointer(to: &mutableSelf) { pointer in
-            let name = String(describing: type(of: mutableSelf))
+            let name = String(describing: type(of: self))
             let address = String(format: "%p", pointer)
             let label = self.label.map { " \"\($0)\"" } ?? ""
             return "<\(name): \(address)\(label)>"
