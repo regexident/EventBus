@@ -18,6 +18,22 @@
 		BF851B821F5D94B00042DD59 /* EventNotifiableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF851B811F5D94B00042DD59 /* EventNotifiableTests.swift */; };
 		BF9142E41DF57F4300040556 /* EventBus.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF2118351DF488DF00FF863D /* EventBus.framework */; };
 		BF9142E51DF57F4300040556 /* EventBus.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BF2118351DF488DF00FF863D /* EventBus.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BFBBACF32121CE88001F96DD /* EventRegistrable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBACF22121CE88001F96DD /* EventRegistrable.swift */; };
+		BFBBACF52121CED7001F96DD /* EventSubscribable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBACF42121CED7001F96DD /* EventSubscribable.swift */; };
+		BFBBACF72121CEE6001F96DD /* EventChainable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBACF62121CEE6001F96DD /* EventChainable.swift */; };
+		BFBBACF92121CEF6001F96DD /* EventNotifiable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBACF82121CEF6001F96DD /* EventNotifiable.swift */; };
+		BFBBACFB2121CF03001F96DD /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBACFA2121CF03001F96DD /* Options.swift */; };
+		BFBBACFD2121CF0E001F96DD /* ErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBACFC2121CF0E001F96DD /* ErrorHandler.swift */; };
+		BFBBACFF2121CF27001F96DD /* LogHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBACFE2121CF27001F96DD /* LogHandler.swift */; };
+		BFBBAD012121CF3C001F96DD /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBAD002121CF3C001F96DD /* Errors.swift */; };
+		BFBBAD022121D091001F96DD /* EventRegistrable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBACF22121CE88001F96DD /* EventRegistrable.swift */; };
+		BFBBAD032121D091001F96DD /* EventSubscribable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBACF42121CED7001F96DD /* EventSubscribable.swift */; };
+		BFBBAD042121D091001F96DD /* EventChainable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBACF62121CEE6001F96DD /* EventChainable.swift */; };
+		BFBBAD052121D091001F96DD /* EventNotifiable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBACF82121CEF6001F96DD /* EventNotifiable.swift */; };
+		BFBBAD062121D091001F96DD /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBACFA2121CF03001F96DD /* Options.swift */; };
+		BFBBAD072121D091001F96DD /* ErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBACFC2121CF0E001F96DD /* ErrorHandler.swift */; };
+		BFBBAD082121D091001F96DD /* LogHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBACFE2121CF27001F96DD /* LogHandler.swift */; };
+		BFBBAD092121D091001F96DD /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBBAD002121CF3C001F96DD /* Errors.swift */; };
 		BFF704081F5D976A00DFF413 /* EventBus.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF21184F1DF488F800FF863D /* EventBus.swift */; };
 		BFF7040A1F5D97F100DFF413 /* EventChainableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF704091F5D97F100DFF413 /* EventChainableTests.swift */; };
 		BFF7040C1F5D981100DFF413 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF7040B1F5D981100DFF413 /* Utilities.swift */; };
@@ -79,6 +95,14 @@
 		BF2118631DF5772800FF863D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BF4B823E1F41ACC1009A317D /* libEventBus.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libEventBus.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF851B811F5D94B00042DD59 /* EventNotifiableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventNotifiableTests.swift; sourceTree = "<group>"; };
+		BFBBACF22121CE88001F96DD /* EventRegistrable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventRegistrable.swift; sourceTree = "<group>"; };
+		BFBBACF42121CED7001F96DD /* EventSubscribable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSubscribable.swift; sourceTree = "<group>"; };
+		BFBBACF62121CEE6001F96DD /* EventChainable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventChainable.swift; sourceTree = "<group>"; };
+		BFBBACF82121CEF6001F96DD /* EventNotifiable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventNotifiable.swift; sourceTree = "<group>"; };
+		BFBBACFA2121CF03001F96DD /* Options.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Options.swift; sourceTree = "<group>"; };
+		BFBBACFC2121CF0E001F96DD /* ErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandler.swift; sourceTree = "<group>"; };
+		BFBBACFE2121CF27001F96DD /* LogHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogHandler.swift; sourceTree = "<group>"; };
+		BFBBAD002121CF3C001F96DD /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
 		BFE7A7551E64B89600F51068 /* Universal.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Universal.xcconfig; sourceTree = "<group>"; };
 		BFF704091F5D97F100DFF413 /* EventChainableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventChainableTests.swift; sourceTree = "<group>"; };
 		BFF7040B1F5D981100DFF413 /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
@@ -145,6 +169,14 @@
 			isa = PBXGroup;
 			children = (
 				BF21184F1DF488F800FF863D /* EventBus.swift */,
+				BFBBACF22121CE88001F96DD /* EventRegistrable.swift */,
+				BFBBACF42121CED7001F96DD /* EventSubscribable.swift */,
+				BFBBACF62121CEE6001F96DD /* EventChainable.swift */,
+				BFBBACF82121CEF6001F96DD /* EventNotifiable.swift */,
+				BFBBACFA2121CF03001F96DD /* Options.swift */,
+				BFBBACFC2121CF0E001F96DD /* ErrorHandler.swift */,
+				BFBBACFE2121CF27001F96DD /* LogHandler.swift */,
+				BFBBAD002121CF3C001F96DD /* Errors.swift */,
 				BF2118391DF488DF00FF863D /* Info.plist */,
 			);
 			path = EventBus;
@@ -361,7 +393,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BFBBACF72121CEE6001F96DD /* EventChainable.swift in Sources */,
+				BFBBACFD2121CF0E001F96DD /* ErrorHandler.swift in Sources */,
+				BFBBACF92121CEF6001F96DD /* EventNotifiable.swift in Sources */,
+				BFBBACFF2121CF27001F96DD /* LogHandler.swift in Sources */,
 				BFF704081F5D976A00DFF413 /* EventBus.swift in Sources */,
+				BFBBACF32121CE88001F96DD /* EventRegistrable.swift in Sources */,
+				BFBBACFB2121CF03001F96DD /* Options.swift in Sources */,
+				BFBBAD012121CF3C001F96DD /* Errors.swift in Sources */,
+				BFBBACF52121CED7001F96DD /* EventSubscribable.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -389,7 +429,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BFBBAD042121D091001F96DD /* EventChainable.swift in Sources */,
+				BFBBAD072121D091001F96DD /* ErrorHandler.swift in Sources */,
+				BFBBAD052121D091001F96DD /* EventNotifiable.swift in Sources */,
+				BFBBAD082121D091001F96DD /* LogHandler.swift in Sources */,
 				BF4B82471F41AD21009A317D /* EventBus.swift in Sources */,
+				BFBBAD022121D091001F96DD /* EventRegistrable.swift in Sources */,
+				BFBBAD062121D091001F96DD /* Options.swift in Sources */,
+				BFBBAD092121D091001F96DD /* Errors.swift in Sources */,
+				BFBBAD032121D091001F96DD /* EventSubscribable.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
