@@ -41,6 +41,13 @@ public struct Options: OptionSet {
     /// ```
     public static let warnUnhandled = Options(rawValue: 1 << 1)
 
+    /// All available warnings:
+    /// - `.warnUnknown`
+    /// - `.warnUnhandled`
+    public static var allWarnings: Options {
+        return [.warnUnknown, .warnUnhandled]
+    }
+    
     /// Print a log of emitted events for a given event bus.
     public static let logEvents = Options(rawValue: 1 << 2)
 }
