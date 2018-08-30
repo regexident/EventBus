@@ -187,7 +187,9 @@ extension EventBus: EventSubscribable {
         }
         self.lock.with {
             self.updateSubscribers(for: eventType) { subscribed in
-                subscribed.remove(WeakBox(subscriber as AnyObject))
+                while let index = subscribed.index(where: { $0 == (subscriber as AnyObject) }) {
+                    subscribed.remove(at: index)
+                }
             }
         }
     }
@@ -201,7 +203,9 @@ extension EventBus: EventSubscribable {
         self.lock.with {
             for (identifier, subscribed) in self.subscribed {
                 self.subscribed[identifier] = self.update(set: subscribed) { subscribed in
-                    subscribed.remove(WeakBox(subscriber as AnyObject))
+                    while let index = subscribed.index(where: { $0 == (subscriber as AnyObject) }) {
+                        subscribed.remove(at: index)
+                    }
                 }
             }
         }
@@ -226,7 +230,7 @@ extension EventBus: EventSubscribable {
             guard let subscribed = self.subscribed[ObjectIdentifier(eventType)] else {
                 return false
             }
-            return subscribed.contains { $0.inner === (subscriber as AnyObject) }
+            return subscribed.contains { $0 == (subscriber as AnyObject) }
         }
     }
 }
@@ -328,7 +332,7 @@ extension EventBus: EventChainable {
             guard let chained = self.chained[ObjectIdentifier(eventType)] else {
                 return false
             }
-            return chained.contains { $0.inner === (chain as AnyObject) }
+            return chained.contains { $0 == (chain as AnyObject) }
         }
     }
 }
