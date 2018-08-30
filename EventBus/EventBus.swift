@@ -60,18 +60,18 @@ public class EventBus: EventBusProtocol {
     fileprivate var subscribed: [ObjectIdentifier: WeakSet] = [:]
     fileprivate var chained: [ObjectIdentifier: WeakSet] = [:]
 
-    fileprivate let serialQueue: DispatchQueue = DispatchQueue(label: "com.regexident.eventbus")
-    fileprivate let queue: DispatchQueue
+    fileprivate let lock: NSRecursiveLock = .init()
+    fileprivate let notificationQueue: DispatchQueue
 
-    /// Creates an event bus with a given configuration and dispatch queue.
+    /// Creates an event bus with a given configuration and dispatch notificationQueue.
     ///
     /// - Parameters:
     ///   - options: the event bus' options
-    ///   - queue: the dispatch queue to notify subscribers on
-    public init(options: Options? = nil, label: String? = nil, queue: DispatchQueue = .global()) {
+    ///   - notificationQueue: the dispatch notificationQueue to notify subscribers on
+    public init(options: Options? = nil, label: String? = nil, notificationQueue: DispatchQueue = .global()) {
         self.options = options ?? Options()
         self.label = label
-        self.queue = queue
+        self.notificationQueue = notificationQueue
     }
 
     /// The event types the event bus is registered for.
@@ -169,7 +169,7 @@ extension EventBus: EventSubscribable {
         if options.contains(.warnUnknown) {
             self.warnIfUnknown(eventType)
         }
-        self.serialQueue.sync {
+        self.lock.with {
             self.updateSubscribers(for: eventType) { subscribed in
                 subscribed.insert(WeakBox(subscriber as AnyObject))
             }
@@ -185,7 +185,7 @@ extension EventBus: EventSubscribable {
         if options.contains(.warnUnknown) {
             self.warnIfUnknown(eventType)
         }
-        self.serialQueue.sync {
+        self.lock.with {
             self.updateSubscribers(for: eventType) { subscribed in
                 subscribed.remove(WeakBox(subscriber as AnyObject))
             }
@@ -198,7 +198,7 @@ extension EventBus: EventSubscribable {
 
     public func remove<T>(subscriber: T, options: Options) {
         self.warnIfNonClass(subscriber)
-        self.serialQueue.sync {
+        self.lock.with {
             for (identifier, subscribed) in self.subscribed {
                 self.subscribed[identifier] = self.update(set: subscribed) { subscribed in
                     subscribed.remove(WeakBox(subscriber as AnyObject))
@@ -208,7 +208,7 @@ extension EventBus: EventSubscribable {
     }
 
     public func removeAllSubscribers() {
-        self.serialQueue.sync {
+        self.lock.with {
             self.subscribed = [:]
         }
     }
@@ -222,7 +222,7 @@ extension EventBus: EventSubscribable {
         if options.contains(.warnUnknown) {
             self.warnIfUnknown(eventType)
         }
-        return self.serialQueue.sync {
+        return self.lock.with {
             guard let subscribed = self.subscribed[ObjectIdentifier(eventType)] else {
                 return false
             }
@@ -243,13 +243,13 @@ extension EventBus: EventNotifiable {
             self.warnIfUnknown(eventType)
         }
         self.logEvent(eventType)
-        return self.serialQueue.sync {
+        return self.lock.with {
             var handled: Int = 0
             let identifier = ObjectIdentifier(eventType)
             // Notify our direct subscribers:
             if let subscribers = self.subscribed[identifier] {
                 for subscriber in subscribers.lazy.compactMap({ $0.inner as? T }) {
-                    self.queue.async {
+                    self.notificationQueue.async {
                         closure(subscriber)
                     }
                 }
@@ -278,7 +278,7 @@ extension EventBus: EventChainable {
         if options.contains(.warnUnknown) {
             self.warnIfUnknown(eventType)
         }
-        self.serialQueue.sync {
+        self.lock.with {
             self.updateChains(for: eventType) { chained in
                 chained.insert(WeakBox(chain as AnyObject))
             }
@@ -293,7 +293,7 @@ extension EventBus: EventChainable {
         if options.contains(.warnUnknown) {
             self.warnIfUnknown(eventType)
         }
-        self.serialQueue.sync {
+        self.lock.with {
             self.updateChains(for: eventType) { chained in
                 chained.remove(WeakBox(chain as AnyObject))
             }
@@ -301,7 +301,7 @@ extension EventBus: EventChainable {
     }
 
     public func detach(chain: EventNotifiable) {
-        self.serialQueue.sync {
+        self.lock.with {
             for (identifier, chained) in self.chained {
                 self.chained[identifier] = self.update(set: chained) { chained in
                     chained.remove(WeakBox(chain as AnyObject))
@@ -311,7 +311,7 @@ extension EventBus: EventChainable {
     }
 
     public func detachAllChains() {
-        self.serialQueue.sync {
+        self.lock.with {
             self.chained = [:]
         }
     }
@@ -324,7 +324,7 @@ extension EventBus: EventChainable {
         if options.contains(.warnUnknown) {
             self.warnIfUnknown(eventType)
         }
-        return self.serialQueue.sync {
+        return self.lock.with {
             guard let chained = self.chained[ObjectIdentifier(eventType)] else {
                 return false
             }
