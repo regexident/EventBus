@@ -207,4 +207,4 @@ Or to add **EventBus** to your project is via [CocoaPods](https://cocoapods.org)
 
 ## License
 
-**EventBus** is available under a **modified BSD-3 clause license**. See the `LICENSE` file for more info.
+**EventBus** is available under a **MPL-2 license**. See the `LICENSE` file for more info.
